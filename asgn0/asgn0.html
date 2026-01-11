@@ -26,6 +26,25 @@
   <br><br>
   <input type="button" id="drawBtn" value="Draw" onclick="handleDrawEvent()">
 
+  <br><br>
+  <label for="op-select">Operation:</label>
+  <select id="op-select">
+    <option value="add">Add</option>
+    <option value="sub">Subtract</option>
+    <option value="mul">Multiply</option>
+    <option value="div">Divide</option>
+    <option value="magnitude">Magnitude</option>
+    <option value="normalize">Normalize</option>
+    <option value="angle">Angle Between</option>
+    <option value="area">Area</option>
+  </select>
+  
+  <label for="scalar">Scalar:</label>
+  <input type="text" id="scalar" size="4">
+  <br><br>
+  
+  <input type="button" value="Draw Operation" onclick="handleDrawOperationEvent()">
+
   <script src="lib/cuon-matrix-cse160.js"></script>
   <script src="asgn0.js"></script>
 </body>
