@@ -227,12 +227,10 @@ class Matrix4 {
     multiply(other) {
         var i, e, a, b, ai0, ai1, ai2, ai3;
 
-        // Calculate e = a * b
         e = this.elements;
         a = this.elements;
         b = other.elements;
 
-        // If e equals b, copy b to temporary matrix.
         if (e === b) {
           b = new Float32Array(16);
           for (i = 0; i < 16; ++i) {
