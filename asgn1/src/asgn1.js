@@ -1,6 +1,6 @@
 // asgn1.js
 
-// Vertex shader program
+// Vertex shader
 var VSHADER_SOURCE =
     'attribute vec4 a_Position;\n' +
     'uniform float u_Size;\n' +
@@ -9,7 +9,7 @@ var VSHADER_SOURCE =
     '  gl_PointSize = u_Size;\n' +
     '}\n';
 
-// Fragment shader program
+// Fragment shader
 var FSHADER_SOURCE =
     'precision mediump float;\n' +
     'uniform vec4 u_FragColor;\n' +
@@ -18,164 +18,49 @@ var FSHADER_SOURCE =
     '}\n';
 
 // --- GLOBAL VARIABLES ---
-let canvas;
-let gl;
-let a_Position;
-let u_FragColor;
-let u_Size;
-
-// --- 1. SETUP WEBGL ---
-function setupWebGL() {
-    canvas = document.getElementById('webgl');
-    gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
-    if (!gl) {
-        gl = canvas.getContext("experimental-webgl", { preserveDrawingBuffer: true });
-    }
-    if (!gl) {
-        console.log('Failed to get the rendering context for WebGL');
-        return;
-    }
-}
-
-// --- 2. CONNECT VARIABLES TO GLSL ---
-function connectVariablesToGLSL() {
-    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-        console.log('Failed to intialize shaders.');
-        return;
-    }
-
-    a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-    if (a_Position < 0) {
-        console.log('Failed to get the storage location of a_Position');
-        return;
-    }
-
-    u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
-    if (!u_FragColor) {
-        console.log('Failed to get the storage location of u_FragColor');
-        return;
-    }
-
-    u_Size = gl.getUniformLocation(gl.program, 'u_Size');
-    if (!u_Size) {
-        console.log('Failed to get the storage location of u_Size');
-        return;
-    }
-}
-
-// --- CLASS DEFINITION: POINT ---
-class Point {
-    constructor() {
-        this.type = 'point';
-        this.position = [0.0, 0.0, 0.0];
-        this.color = [1.0, 1.0, 1.0, 1.0];
-        this.size = 10.0;
-    }
-
-    render() {
-        var xy = this.position;
-        var rgba = this.color;
-        var size = this.size;
-
-        gl.disableVertexAttribArray(a_Position);
-        gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
-        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-        gl.uniform1f(u_Size, size);
-        gl.drawArrays(gl.POINTS, 0, 1);
-    }
-}
-
-// --- CLASS DEFINITION: TRIANGLE ---
-class Triangle {
-    constructor() {
-        this.type = 'triangle';
-        this.position = [0.0, 0.0, 0.0];
-        this.color = [1.0, 1.0, 1.0, 1.0];
-        this.size = 10.0;
-    }
-
-    render() {
-        var xy = this.position;
-        var rgba = this.color;
-        var size = this.size;
-
-        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-        gl.uniform1f(u_Size, size);
-
-        var d = this.size / 200.0;
-        drawTriangle([xy[0], xy[1], xy[0] + d, xy[1], xy[0], xy[1] + d]);
-    }
-}
-
-// --- CLASS DEFINITION: CIRCLE ---
-class Circle {
-    constructor() {
-        this.type = 'circle';
-        this.position = [0.0, 0.0, 0.0];
-        this.color = [1.0, 1.0, 1.0, 1.0];
-        this.size = 10.0;
-        this.segments = 10;
-    }
-
-    render() {
-        var xy = this.position;
-        var rgba = this.color;
-        var size = this.size;
-
-        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-        gl.uniform1f(u_Size, 0); // Size not used for manual vertices
-
-        var d = size / 200.0;
-        let angleStep = 360 / this.segments;
-
-        for (var angle = 0; angle < 360; angle += angleStep) {
-            let centerPt = [xy[0], xy[1]];
-            let angle1 = angle;
-            let angle2 = angle + angleStep;
-
-            let vec1 = [Math.cos(angle1 * Math.PI / 180) * d, Math.sin(angle1 * Math.PI / 180) * d];
-            let vec2 = [Math.cos(angle2 * Math.PI / 180) * d, Math.sin(angle2 * Math.PI / 180) * d];
-
-            let pt1 = [centerPt[0] + vec1[0], centerPt[1] + vec1[1]];
-            let pt2 = [centerPt[0] + vec2[0], centerPt[1] + vec2[1]];
-
-            drawTriangle([xy[0], xy[1], pt1[0], pt1[1], pt2[0], pt2[1]]);
-        }
-    }
-}
-
-function drawTriangle(vertices) {
-    var n = 3;
-    var vertexBuffer = gl.createBuffer();
-    if (!vertexBuffer) {
-        console.log('Failed to create the buffer object');
-        return -1;
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
-    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(a_Position);
-    gl.drawArrays(gl.TRIANGLES, 0, n);
-}
-
-
-// --- UI GLOBALS ---
+let canvas, gl, a_Position, u_FragColor, u_Size;
 let g_selectedColor = [1.0, 0.0, 0.0, 1.0];
 let g_selectedSize = 10;
 let g_selectedType = 'POINT';
 let g_selectedSegments = 10;
+let g_shapesList = [];
+
+// --- ANIMATION GLOBALS ---
+let g_thwompX = 0;
+let g_thwompY = 0;
+let g_isAnimating = false;
+let g_animPhase = 0; // 0: Idle, 1: Shake, 2: Fall, 3: Rise
+let g_startTime = 0;
+
+// --- SETUP & INIT ---
+function setupWebGL() {
+    canvas = document.getElementById('webgl');
+    gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
+    if (!gl) gl = canvas.getContext("experimental-webgl", { preserveDrawingBuffer: true });
+    if (!gl) console.log('Failed to get WebGL context');
+}
+
+function connectVariablesToGLSL() {
+    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) return;
+    a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+    u_Size = gl.getUniformLocation(gl.program, 'u_Size');
+}
 
 function addActionsForHtmlUI() {
-    // Buttons
     document.getElementById('clearButton').onclick = function () { g_shapesList = []; renderAllShapes(); };
-
     document.getElementById('pointButton').onclick = function () { g_selectedType = 'POINT'; };
     document.getElementById('triButton').onclick = function () { g_selectedType = 'TRIANGLE'; };
     document.getElementById('circleButton').onclick = function () { g_selectedType = 'CIRCLE'; };
 
-    // NEW: Picture Button
-    document.getElementById('pictureButton').onclick = function () { drawPicture(); };
+    // Picture & Animation Buttons
+    document.getElementById('pictureButton').onclick = function () {
+        g_isAnimating = false;
+        g_thwompX = 0;
+        g_thwompY = 0;
+        drawPicture();
+    };
+    document.getElementById('fallButton').onclick = function () { startFalling(); };
 
     // Sliders
     document.getElementById('redSlide').addEventListener('mouseup', function () { g_selectedColor[0] = this.value / 100; });
@@ -191,13 +76,81 @@ function main() {
     addActionsForHtmlUI();
 
     canvas.onmousedown = click;
-    canvas.onmousemove = function (ev) { if (ev.buttons == 1) { click(ev); } };
+    canvas.onmousemove = function (ev) { if (ev.buttons == 1) click(ev); };
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
-var g_shapesList = [];
+// --- CLASSES ---
+class Point {
+    constructor() {
+        this.type = 'point';
+        this.position = [0.0, 0.0, 0.0];
+        this.color = [1.0, 1.0, 1.0, 1.0];
+        this.size = 10.0;
+    }
+    render() {
+        gl.disableVertexAttribArray(a_Position);
+        gl.vertexAttrib3f(a_Position, this.position[0], this.position[1], 0.0);
+        gl.uniform4f(u_FragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
+        gl.uniform1f(u_Size, this.size);
+        gl.drawArrays(gl.POINTS, 0, 1);
+    }
+}
+
+class Triangle {
+    constructor() {
+        this.type = 'triangle';
+        this.position = [0.0, 0.0, 0.0];
+        this.color = [1.0, 1.0, 1.0, 1.0];
+        this.size = 10.0;
+    }
+    render() {
+        gl.uniform4f(u_FragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
+        gl.uniform1f(u_Size, this.size);
+        var d = this.size / 200.0;
+        drawTriangle([this.position[0], this.position[1], this.position[0] + d, this.position[1], this.position[0], this.position[1] + d]);
+    }
+}
+
+class Circle {
+    constructor() {
+        this.type = 'circle';
+        this.position = [0.0, 0.0, 0.0];
+        this.color = [1.0, 1.0, 1.0, 1.0];
+        this.size = 10.0;
+        this.segments = 10;
+    }
+    render() {
+        gl.uniform4f(u_FragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
+        gl.uniform1f(u_Size, 0);
+        var d = this.size / 200.0;
+        let angleStep = 360 / this.segments;
+        for (var angle = 0; angle < 360; angle += angleStep) {
+            let centerPt = [this.position[0], this.position[1]];
+            let angle1 = angle;
+            let angle2 = angle + angleStep;
+            let vec1 = [Math.cos(angle1 * Math.PI / 180) * d, Math.sin(angle1 * Math.PI / 180) * d];
+            let vec2 = [Math.cos(angle2 * Math.PI / 180) * d, Math.sin(angle2 * Math.PI / 180) * d];
+            let pt1 = [centerPt[0] + vec1[0], centerPt[1] + vec1[1]];
+            let pt2 = [centerPt[0] + vec2[0], centerPt[1] + vec2[1]];
+            drawTriangle([this.position[0], this.position[1], pt1[0], pt1[1], pt2[0], pt2[1]]);
+        }
+    }
+}
+
+// --- HELPERS ---
+function drawTriangle(vertices) {
+    var n = 3;
+    var vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer) return -1;
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_Position);
+    gl.drawArrays(gl.TRIANGLES, 0, n);
+}
 
 function click(ev) {
     let x = ev.clientX;
@@ -208,104 +161,167 @@ function click(ev) {
     y = (canvas.height / 2 - (y - rect.top)) / (canvas.height / 2);
 
     let point;
-    if (g_selectedType === 'POINT') {
-        point = new Point();
-    } else if (g_selectedType === 'TRIANGLE') {
-        point = new Triangle();
-    } else {
+    if (g_selectedType === 'POINT') point = new Point();
+    else if (g_selectedType === 'TRIANGLE') point = new Triangle();
+    else {
         point = new Circle();
         point.segments = g_selectedSegments;
     }
 
     point.position = [x, y];
-    point.color = [g_selectedColor[0], g_selectedColor[1], g_selectedColor[2], g_selectedColor[3]];
+    point.color = g_selectedColor.slice();
     point.size = g_selectedSize;
-
     g_shapesList.push(point);
     renderAllShapes();
 }
 
 function renderAllShapes() {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    var len = g_shapesList.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0; i < g_shapesList.length; i++) {
         g_shapesList[i].render();
     }
 }
 
-// --- 12. DRAW PICTURE (Thwomp) ---
+// --- ANIMATION LOGIC ---
+function startFalling() {
+    g_isAnimating = true;
+    g_animPhase = 1; // Start Shaking
+    g_startTime = performance.now();
+    g_thwompX = 0;
+    g_thwompY = 0;
+    tick();
+}
+
+function tick() {
+    if (!g_isAnimating) return;
+
+    let now = performance.now();
+
+    // PHASE 1: SHAKE
+    if (g_animPhase === 1) {
+        let elapsed = now - g_startTime;
+        if (elapsed < 800) {
+            g_thwompX = Math.sin(elapsed / 20) * 0.05;
+        } else {
+            g_thwompX = 0;
+            g_animPhase = 2; // Switch to Falling
+        }
+    }
+    // PHASE 2: FALL
+    else if (g_animPhase === 2) {
+        g_thwompY -= 0.06;
+        if (g_thwompY < -1.8) {
+            g_animPhase = 3; // Switch to Rising
+        }
+    }
+    // PHASE 3: RISE
+    else if (g_animPhase === 3) {
+        g_thwompY += 0.015;
+        if (g_thwompY >= 0) {
+            g_thwompY = 0;
+            g_isAnimating = false; // Stop
+            g_animPhase = 0;
+        }
+    }
+
+    drawPicture();
+
+    if (g_isAnimating) {
+        requestAnimationFrame(tick);
+    }
+}
+
+// --- DRAW PICTURE ---
 function drawPicture() {
-    // Clear list and screen
     g_shapesList = [];
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // --- 1. BODY (Grey Box) ---
-    gl.uniform4f(u_FragColor, 0.6, 0.6, 0.7, 1.0);
-    drawTriangle([-0.4, -0.4, -0.4, 0.4, 0.4, 0.4]);
-    drawTriangle([-0.4, -0.4, 0.4, -0.4, 0.4, 0.4]);
+    // ===================================
+    // 1. WATERMARK (Static 'R' & 'S')
+    // ===================================
+    gl.uniform4f(u_FragColor, 0.2, 0.2, 0.2, 1.0);
 
-    // --- 2. SPIKES (Darker Grey) ---
+    // 'R' (Left)
+    drawTriangle([-0.7, -0.6, -0.5, -0.6, -0.7, 0.6]);
+    drawTriangle([-0.5, -0.6, -0.5, 0.6, -0.7, 0.6]);
+    drawTriangle([-0.5, 0.6, -0.2, 0.6, -0.5, 0.4]);
+    drawTriangle([-0.2, 0.6, -0.2, 0.1, -0.35, 0.1]);
+    drawTriangle([-0.2, 0.1, -0.5, 0.1, -0.5, 0.3]);
+    drawTriangle([-0.5, 0.1, -0.2, -0.6, -0.4, -0.6]);
+
+    // 'S' (Right)
+    drawTriangle([0.2, 0.6, 0.7, 0.6, 0.2, 0.4]);
+    drawTriangle([0.2, 0.6, 0.2, 0.0, 0.35, 0.0]);
+    drawTriangle([0.2, 0.1, 0.7, -0.1, 0.3, 0.0]);
+    drawTriangle([0.2, 0.1, 0.7, -0.1, 0.6, 0.0]);
+    drawTriangle([0.7, 0.0, 0.7, -0.6, 0.55, -0.6]);
+    drawTriangle([0.7, -0.6, 0.2, -0.6, 0.7, -0.4]);
+
+    // ===================================
+    // 2. THWOMP (Dynamic)
+    // ===================================
+    function drawPart(v) {
+        drawTriangle([
+            v[0] + g_thwompX, v[1] + g_thwompY,
+            v[2] + g_thwompX, v[3] + g_thwompY,
+            v[4] + g_thwompX, v[5] + g_thwompY
+        ]);
+    }
+
+    // Body
+    gl.uniform4f(u_FragColor, 0.6, 0.6, 0.7, 1.0);
+    drawPart([-0.4, -0.4, -0.4, 0.4, 0.4, 0.4]);
+    drawPart([-0.4, -0.4, 0.4, -0.4, 0.4, 0.4]);
+
+    // Spikes
     gl.uniform4f(u_FragColor, 0.4, 0.4, 0.5, 1.0);
-    // Top
-    drawTriangle([-0.35, 0.4, -0.15, 0.4, -0.25, 0.6]);
-    drawTriangle([-0.1, 0.4, 0.1, 0.4, 0.0, 0.6]);
-    drawTriangle([0.15, 0.4, 0.35, 0.4, 0.25, 0.6]);
-    // Bottom
-    drawTriangle([-0.35, -0.4, -0.15, -0.4, -0.25, -0.6]);
-    drawTriangle([-0.1, -0.4, 0.1, -0.4, 0.0, -0.6]);
-    drawTriangle([0.15, -0.4, 0.35, -0.4, 0.25, -0.6]);
-    // Left
-    drawTriangle([-0.4, 0.35, -0.4, 0.15, -0.6, 0.25]);
-    drawTriangle([-0.4, 0.1, -0.4, -0.1, -0.6, 0.0]);
-    drawTriangle([-0.4, -0.15, -0.4, -0.35, -0.6, -0.25]);
-    // Right
-    drawTriangle([0.4, 0.35, 0.4, 0.15, 0.6, 0.25]);
-    drawTriangle([0.4, 0.1, 0.4, -0.1, 0.6, 0.0]);
-    drawTriangle([0.4, -0.15, 0.4, -0.35, 0.6, -0.25]);
+    drawPart([-0.35, 0.4, -0.15, 0.4, -0.25, 0.6]);
+    drawPart([-0.1, 0.4, 0.1, 0.4, 0.0, 0.6]);
+    drawPart([0.15, 0.4, 0.35, 0.4, 0.25, 0.6]);
+    drawPart([-0.35, -0.4, -0.15, -0.4, -0.25, -0.6]);
+    drawPart([-0.1, -0.4, 0.1, -0.4, 0.0, -0.6]);
+    drawPart([0.15, -0.4, 0.35, -0.4, 0.25, -0.6]);
+    drawPart([-0.4, 0.35, -0.4, 0.15, -0.6, 0.25]);
+    drawPart([-0.4, 0.1, -0.4, -0.1, -0.6, 0.0]);
+    drawPart([-0.4, -0.15, -0.4, -0.35, -0.6, -0.25]);
+    drawPart([0.4, 0.35, 0.4, 0.15, 0.6, 0.25]);
+    drawPart([0.4, 0.1, 0.4, -0.1, 0.6, 0.0]);
+    drawPart([0.4, -0.15, 0.4, -0.35, 0.6, -0.25]);
 
-    // --- 3. EYE SOCKETS (Black Voids) ---
+    // Sockets
     gl.uniform4f(u_FragColor, 0.0, 0.0, 0.0, 1.0);
-    drawTriangle([-0.3, 0.1, -0.05, 0.1, -0.3, 0.3]); 
-    drawTriangle([-0.3, 0.3, -0.05, 0.1, -0.05, 0.3]);
+    drawPart([-0.3, 0.1, -0.05, 0.1, -0.3, 0.3]);
+    drawPart([-0.3, 0.3, -0.05, 0.1, -0.05, 0.3]);
+    drawPart([0.05, 0.1, 0.3, 0.1, 0.05, 0.3]);
+    drawPart([0.05, 0.3, 0.3, 0.1, 0.3, 0.3]);
 
-    drawTriangle([0.05, 0.1, 0.3, 0.1, 0.05, 0.3]);   
-    drawTriangle([0.05, 0.3, 0.3, 0.1, 0.3, 0.3]);
-
-
+    // Pupils
     gl.uniform4f(u_FragColor, 1.0, 0.0, 0.0, 1.0);
+    drawPart([-0.12, 0.1, -0.05, 0.1, -0.12, 0.17]);
+    drawPart([-0.12, 0.17, -0.05, 0.1, -0.05, 0.17]);
+    drawPart([0.05, 0.1, 0.12, 0.1, 0.05, 0.17]);
+    drawPart([0.05, 0.17, 0.12, 0.1, 0.12, 0.17]);
 
-
-    drawTriangle([-0.12, 0.1, -0.05, 0.1, -0.12, 0.17]);
-    drawTriangle([-0.12, 0.17, -0.05, 0.1, -0.05, 0.17]);
-
-
-    drawTriangle([0.05, 0.1, 0.12, 0.1, 0.05, 0.17]);
-    drawTriangle([0.05, 0.17, 0.12, 0.1, 0.12, 0.17]);
-
-
+    // Brows
     gl.uniform4f(u_FragColor, 0.6, 0.6, 0.7, 1.0);
-    drawTriangle([-0.3, 0.35, -0.05, 0.25, -0.05, 0.35]); // Left
-    drawTriangle([0.3, 0.35, 0.05, 0.25, 0.05, 0.35]); // Right
+    drawPart([-0.3, 0.35, -0.05, 0.25, -0.05, 0.35]);
+    drawPart([0.3, 0.35, 0.05, 0.25, 0.05, 0.35]);
 
-
+    // Mouth Gap
     gl.uniform4f(u_FragColor, 0.0, 0.0, 0.0, 1.0);
-    drawTriangle([-0.25, -0.12, 0.25, -0.12, -0.25, -0.18]);
-    drawTriangle([-0.25, -0.18, 0.25, -0.12, 0.25, -0.18]);
+    drawPart([-0.25, -0.12, 0.25, -0.12, -0.25, -0.18]);
+    drawPart([-0.25, -0.18, 0.25, -0.12, 0.25, -0.18]);
 
-
+    // Teeth
     gl.uniform4f(u_FragColor, 1.0, 1.0, 1.0, 1.0);
-
-
     let yTop = -0.12;
-    drawTriangle([-0.2, yTop, -0.1, yTop, -0.15, yTop - 0.05]);
-    drawTriangle([-0.1, yTop, 0.0, yTop, -0.05, yTop - 0.05]);
-    drawTriangle([0.0, yTop, 0.1, yTop, 0.05, yTop - 0.05]);
-    drawTriangle([0.1, yTop, 0.2, yTop, 0.15, yTop - 0.05]);
-
-
+    drawPart([-0.2, yTop, -0.1, yTop, -0.15, yTop - 0.05]);
+    drawPart([-0.1, yTop, 0.0, yTop, -0.05, yTop - 0.05]);
+    drawPart([0.0, yTop, 0.1, yTop, 0.05, yTop - 0.05]);
+    drawPart([0.1, yTop, 0.2, yTop, 0.15, yTop - 0.05]);
     let yBot = -0.18;
-    drawTriangle([-0.2, yBot, -0.1, yBot, -0.15, yBot + 0.05]);
-    drawTriangle([-0.1, yBot, 0.0, yBot, -0.05, yBot + 0.05]);
-    drawTriangle([0.0, yBot, 0.1, yBot, 0.05, yBot + 0.05]);
-    drawTriangle([0.1, yBot, 0.2, yBot, 0.15, yBot + 0.05]);
+    drawPart([-0.2, yBot, -0.1, yBot, -0.15, yBot + 0.05]);
+    drawPart([-0.1, yBot, 0.0, yBot, -0.05, yBot + 0.05]);
+    drawPart([0.0, yBot, 0.1, yBot, 0.05, yBot + 0.05]);
+    drawPart([0.1, yBot, 0.2, yBot, 0.15, yBot + 0.05]);
 }
