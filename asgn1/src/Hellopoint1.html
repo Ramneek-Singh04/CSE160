@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Assignment 1: Paint</title>
+</head>
+
+<body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+        Please use a browser that supports "canvas"
+    </canvas>
+
+    <br><br>
+
+    <button type="button" id="clearButton">Clear</button>
+
+    <p>
+        <strong>Drawing Mode:</strong>
+        <button type="button" id="pointButton">Point</button>
+        <button type="button" id="triButton">Triangle</button>
+        <button type="button" id="circleButton">Circle</button>
+    </p>
+
+    <p>
+        <button type="button" id="pictureButton">Draw Picture (Thwomp)</button>
+    </p>
+
+    <p>
+        Red <input type="range" min="0" max="100" value="100" id="redSlide">
+        Green <input type="range" min="0" max="100" value="0" id="greenSlide">
+        Blue <input type="range" min="0" max="100" value="0" id="blueSlide">
+    </p>
+
+    <p>
+        Shape Size <input type="range" min="5" max="40" value="10" id="sizeSlide">
+    </p>
+
+    <p>
+        (Circles) Segment Count <input type="range" min="3" max="30" value="10" id="segmentSlide">
+    </p>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="asgn1.js"></script>
+</body>
+
+</html>
