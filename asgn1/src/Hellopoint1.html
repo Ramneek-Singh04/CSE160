@@ -16,17 +16,16 @@
     font-family: sans-serif;
 ">
 
-    <canvas id="webgl" width="400" height="400" style="border: 2px solid white;">
+    <canvas id="webgl" width="400" height="400" style="border: 2px solid white; display: block; margin-bottom: 20px;">
         Please use a browser that supports "canvas"
     </canvas>
 
-    <br><br>
-
     <div style="
         background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black */
-        padding: 15px;
+        padding: 20px;
         border-radius: 10px;
         display: inline-block;
+        max-width: 600px; /* Keeps text line length readable */
     ">
 
         <p>
@@ -66,6 +65,26 @@
             <input type="range" min="3" max="30" value="10" id="segmentSlide">
             <span id="valSeg">10</span>
         </p>
+
+        <hr style="border-color: rgba(255,255,255,0.3); margin: 20px 0;">
+
+        <div style="display: flex; align-items: flex-start; gap: 20px;">
+
+            <div style="flex: 1;">
+                <h3 style="margin-top: 0;">About My Drawing</h3>
+                <p style="font-weight: normal; line-height: 1.5;">
+                    For the 'Awesomeness' factor, I implemented a custom animation that mimics the Thwomp's signature behavior. it shakes to
+                    warn the player, falls to smush Mario, and then slowly rises back up. I also customized the HTML/CSS to include a themed
+                    Mario background and a semi-transparent UI overlay for better readability.
+                </p>
+            </div>
+
+            <div>
+                <img src="IMG_8625.jpeg" alt="Raw Paper Drawing" width="350"
+                    style="border: 2px solid white; border-radius: 5px;">
+            </div>
+
+        </div>
 
     </div>
 
