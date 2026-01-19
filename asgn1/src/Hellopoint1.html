@@ -6,40 +6,68 @@
     <title>Assignment 1: Paint</title>
 </head>
 
-<body onload="main()">
-    <canvas id="webgl" width="400" height="400">
+<body onload="main()" style="
+    background-image: url('mario_items.png'); 
+    background-size: cover; 
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: white; 
+    font-weight: bold;
+    font-family: sans-serif;
+">
+
+    <canvas id="webgl" width="400" height="400" style="border: 2px solid white;">
         Please use a browser that supports "canvas"
     </canvas>
 
     <br><br>
 
-    <button type="button" id="clearButton">Clear</button>
+    <div style="
+        background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black */
+        padding: 15px;
+        border-radius: 10px;
+        display: inline-block;
+    ">
 
-    <p>
-        <strong>Drawing Mode:</strong>
-        <button type="button" id="pointButton">Point</button>
-        <button type="button" id="triButton">Triangle</button>
-        <button type="button" id="circleButton">Circle</button>
-    </p>
+        <p>
+            <button type="button" id="clearButton">Clear</button>
+            <button type="button" id="pointButton">Point</button>
+            <button type="button" id="triButton">Triangle</button>
+            <button type="button" id="circleButton">Circle</button>
+        </p>
 
-    <p>
-        <button type="button" id="pictureButton">Draw Picture (Thwomp)</button>
-        <button type="button" id="fallButton">Break Canvas!</button>
-    </p>
+        <p>
+            <button type="button" id="pictureButton">Draw Picture</button>
+            <button type="button" id="fallButton">THWOMP!</button>
+        </p>
 
-    <p>
-        Red <input type="range" min="0" max="100" value="100" id="redSlide">
-        Green <input type="range" min="0" max="100" value="0" id="greenSlide">
-        Blue <input type="range" min="0" max="100" value="0" id="blueSlide">
-    </p>
+        <p>
+            <span style="color: #ff4d4d;">Red</span>
+            <input type="range" min="0" max="100" value="100" id="redSlide">
+            <span id="valRed">100</span>
 
-    <p>
-        Shape Size <input type="range" min="5" max="40" value="10" id="sizeSlide">
-    </p>
+            &nbsp;&nbsp; <span style="color: #4dff4d;">Green</span>
+            <input type="range" min="0" max="100" value="0" id="greenSlide">
+            <span id="valGreen">0</span>
 
-    <p>
-        (Circles) Segment Count <input type="range" min="3" max="30" value="10" id="segmentSlide">
-    </p>
+            &nbsp;&nbsp; <span style="color: #4d4dff;">Blue</span>
+            <input type="range" min="0" max="100" value="0" id="blueSlide">
+            <span id="valBlue">0</span>
+        </p>
+
+        <p>
+            Shape Size
+            <input type="range" min="5" max="40" value="10" id="sizeSlide">
+            <span id="valSize">10</span>
+        </p>
+
+        <p>
+            (Circles) Segment Count
+            <input type="range" min="3" max="30" value="10" id="segmentSlide">
+            <span id="valSeg">10</span>
+        </p>
+
+    </div>
 
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>

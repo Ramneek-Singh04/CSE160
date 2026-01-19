@@ -17,7 +17,7 @@ var FSHADER_SOURCE =
     '  gl_FragColor = u_FragColor;\n' +
     '}\n';
 
-// --- GLOBAL VARIABLES ---
+// --- GLOBALS ---
 let canvas, gl, a_Position, u_FragColor, u_Size;
 let g_selectedColor = [1.0, 0.0, 0.0, 1.0];
 let g_selectedSize = 10;
@@ -25,14 +25,14 @@ let g_selectedType = 'POINT';
 let g_selectedSegments = 10;
 let g_shapesList = [];
 
-// --- ANIMATION GLOBALS ---
+// --- ANIMATION ---
 let g_thwompX = 0;
 let g_thwompY = 0;
 let g_isAnimating = false;
-let g_animPhase = 0; // 0: Idle, 1: Shake, 2: Fall, 3: Rise
+let g_animPhase = 0; // 0:Idle, 1:Shake, 2:Fall, 3:Rise
 let g_startTime = 0;
 
-// --- SETUP & INIT ---
+// --- SETUP ---
 function setupWebGL() {
     canvas = document.getElementById('webgl');
     gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
@@ -48,26 +48,38 @@ function connectVariablesToGLSL() {
 }
 
 function addActionsForHtmlUI() {
+    // Buttons
     document.getElementById('clearButton').onclick = function () { g_shapesList = []; renderAllShapes(); };
     document.getElementById('pointButton').onclick = function () { g_selectedType = 'POINT'; };
     document.getElementById('triButton').onclick = function () { g_selectedType = 'TRIANGLE'; };
     document.getElementById('circleButton').onclick = function () { g_selectedType = 'CIRCLE'; };
 
-    // Picture & Animation Buttons
     document.getElementById('pictureButton').onclick = function () {
-        g_isAnimating = false;
-        g_thwompX = 0;
-        g_thwompY = 0;
-        drawPicture();
+        g_isAnimating = false; g_thwompX = 0; g_thwompY = 0; drawPicture();
     };
     document.getElementById('fallButton').onclick = function () { startFalling(); };
 
-    // Sliders
-    document.getElementById('redSlide').addEventListener('mouseup', function () { g_selectedColor[0] = this.value / 100; });
-    document.getElementById('greenSlide').addEventListener('mouseup', function () { g_selectedColor[1] = this.value / 100; });
-    document.getElementById('blueSlide').addEventListener('mouseup', function () { g_selectedColor[2] = this.value / 100; });
-    document.getElementById('sizeSlide').addEventListener('mouseup', function () { g_selectedSize = this.value; });
-    document.getElementById('segmentSlide').addEventListener('mouseup', function () { g_selectedSegments = this.value; });
+    // Sliders (Input event for instant text update)
+    document.getElementById('redSlide').addEventListener('input', function () {
+        g_selectedColor[0] = this.value / 100;
+        document.getElementById('valRed').innerText = this.value;
+    });
+    document.getElementById('greenSlide').addEventListener('input', function () {
+        g_selectedColor[1] = this.value / 100;
+        document.getElementById('valGreen').innerText = this.value;
+    });
+    document.getElementById('blueSlide').addEventListener('input', function () {
+        g_selectedColor[2] = this.value / 100;
+        document.getElementById('valBlue').innerText = this.value;
+    });
+    document.getElementById('sizeSlide').addEventListener('input', function () {
+        g_selectedSize = this.value;
+        document.getElementById('valSize').innerText = this.value;
+    });
+    document.getElementById('segmentSlide').addEventListener('input', function () {
+        g_selectedSegments = this.value;
+        document.getElementById('valSeg').innerText = this.value;
+    });
 }
 
 function main() {
@@ -185,7 +197,7 @@ function renderAllShapes() {
 // --- ANIMATION LOGIC ---
 function startFalling() {
     g_isAnimating = true;
-    g_animPhase = 1; // Start Shaking
+    g_animPhase = 1; // Shake
     g_startTime = performance.now();
     g_thwompX = 0;
     g_thwompY = 0;
@@ -194,54 +206,43 @@ function startFalling() {
 
 function tick() {
     if (!g_isAnimating) return;
-
     let now = performance.now();
 
-    // PHASE 1: SHAKE
-    if (g_animPhase === 1) {
+    if (g_animPhase === 1) { // Shake
         let elapsed = now - g_startTime;
         if (elapsed < 800) {
             g_thwompX = Math.sin(elapsed / 20) * 0.05;
         } else {
             g_thwompX = 0;
-            g_animPhase = 2; // Switch to Falling
+            g_animPhase = 2; // To Fall
         }
     }
-    // PHASE 2: FALL
-    else if (g_animPhase === 2) {
+    else if (g_animPhase === 2) { // Fall
         g_thwompY -= 0.06;
-        if (g_thwompY < -1.8) {
-            g_animPhase = 3; // Switch to Rising
-        }
+        if (g_thwompY < -1.8) g_animPhase = 3; // To Rise
     }
-    // PHASE 3: RISE
-    else if (g_animPhase === 3) {
+    else if (g_animPhase === 3) { // Rise
         g_thwompY += 0.015;
         if (g_thwompY >= 0) {
             g_thwompY = 0;
-            g_isAnimating = false; // Stop
+            g_isAnimating = false;
             g_animPhase = 0;
         }
     }
 
     drawPicture();
-
-    if (g_isAnimating) {
-        requestAnimationFrame(tick);
-    }
+    if (g_isAnimating) requestAnimationFrame(tick);
 }
 
-// --- DRAW PICTURE ---
+// --- DRAW SCENE ---
 function drawPicture() {
     g_shapesList = [];
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // ===================================
-    // 1. WATERMARK (Static 'R' & 'S')
-    // ===================================
+    // --- WATERMARK (BG) ---
     gl.uniform4f(u_FragColor, 0.2, 0.2, 0.2, 1.0);
 
-    // 'R' (Left)
+    // R
     drawTriangle([-0.7, -0.6, -0.5, -0.6, -0.7, 0.6]);
     drawTriangle([-0.5, -0.6, -0.5, 0.6, -0.7, 0.6]);
     drawTriangle([-0.5, 0.6, -0.2, 0.6, -0.5, 0.4]);
@@ -249,7 +250,7 @@ function drawPicture() {
     drawTriangle([-0.2, 0.1, -0.5, 0.1, -0.5, 0.3]);
     drawTriangle([-0.5, 0.1, -0.2, -0.6, -0.4, -0.6]);
 
-    // 'S' (Right)
+    // S
     drawTriangle([0.2, 0.6, 0.7, 0.6, 0.2, 0.4]);
     drawTriangle([0.2, 0.6, 0.2, 0.0, 0.35, 0.0]);
     drawTriangle([0.2, 0.1, 0.7, -0.1, 0.3, 0.0]);
@@ -257,9 +258,7 @@ function drawPicture() {
     drawTriangle([0.7, 0.0, 0.7, -0.6, 0.55, -0.6]);
     drawTriangle([0.7, -0.6, 0.2, -0.6, 0.7, -0.4]);
 
-    // ===================================
-    // 2. THWOMP (Dynamic)
-    // ===================================
+    // --- THWOMP (FG) ---
     function drawPart(v) {
         drawTriangle([
             v[0] + g_thwompX, v[1] + g_thwompY,
