@@ -6,42 +6,63 @@
     <title>Assignment 2: Blocky Animal</title>
 </head>
 
-<body onload="main()">
-    <canvas id="webgl" width="400" height="400">
-        Please use a browser that supports "canvas"
-    </canvas>
+<body onload="main()" style="display: flex; gap: 50px; align-items: flex-start; padding: 20px;">
 
-    <p id="numdot">
-        FPS: 0
-    </p>
-    <br />
-    <p>
-        <button type="button" id="clearButton">Clear Canvas</button>
-    </p>
+    <div id="canvas-container">
+        <canvas id="webgl" width="400" height="400">
+            Please use a browser that supports "canvas"
+        </canvas>
+    
+        <p id="numdot">
+            FPS: 0
+        </p>
+    
+        <p>
+            <button type="button" id="resetButton">Reset All</button>
+        </p>
+    
+        <p>
+            <b>Controls:</b> Click & Drag to rotate | Shift+Click to Poke!
+        </p>
+    
+        <p>
+            Global Animation:
+            <button type="button" id="walkOn">ON</button>
+            <button type="button" id="walkOff">OFF</button>
+        </p>
+    
+        <p>
+            Global Rotation <input type="range" min="0" max="360" value="0" class="slider" id="angleSlide">
+        </p>
+    
+        <p>
+            Shoulder <input type="range" min="-90" max="90" value="0" class="slider" id="yellowSlide">
+        </p>
+    
+        <p>
+            Elbow <input type="range" min="-90" max="90" value="0" class="slider" id="magentaSlide">
+        </p>
+    
+        <p>
+            Claw Extension <input type="range" min="-45" max="37" value="-45" class="slider" id="clawSlide">
+        </p>
+    </div>
 
-    <p>
-        Walk Animation:
-        <button type="button" id="walkOn">ON</button>
-        <button type="button" id="walkOff">OFF</button>
-    </p>
-    <p>
-        Camera Angle <input type="range" min="0" max="360" value="0" id="angleSlide">
-    </p>
+    <div style="border: 2px solid #000; padding: 15px; width: 350px; background-color: #f9f9f9;">
+        <h3>Rubric / Feature Explanation</h3>
 
-    <p>
-        Arms <input type="range" min="-90" max="90" value="0" id="yellowSlide">
-        <button type="button" id="yellowOnButton">ON</button>
-        <button type="button" id="yellowOffButton">OFF</button>
-    </p>
-
-    <p>
-        Lower Arms <input type="range" min="-90" max="90" value="0" id="magentaSlide">
-        <button type="button" id="magentaOnButton">ON</button>
-        <button type="button" id="magentaOffButton">OFF</button>
-    </p>
-    <p>
-        Claw Joint <input type="range" min="-45" max="37" value="-45" class="slider" id="clawSlide">
-    </p>
+        <ul style="padding-left: 20px;">
+            <li><b>Draw a Cube:</b> Implemented using Cube class and drawTriangle3D.</li>
+            <li><b>Matrix:</b> Used Matrix4 for all transformations.</li>
+            <li><b>Render Function:</b> All drawing logic is inside renderScene().</li>
+            <li><b>8+ Parts:</b> Sloth has 29 parts (Head, Body, Limbs, Claws, Tail).</li>
+            <li><b>Joints:</b> Shoulder and Elbow sliders control hierarchy.</li>
+            <li><b>Animation:</b> Walk cycle (on/off button) with phase offsets for natural movement.</li>
+            <li><b>Non-Cube Primitive:</b> Created a Cone class used for Claws and Tail Tip.</li>
+            <li><b>Poke Animation:</b> Shift+Click triggers a special Barrel Roll flip.</li>
+            <li><b>Mouse Control:</b> Click and Drag rotates the camera (X and Y axis).</li>
+        </ul>
+    </div>
 
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>
