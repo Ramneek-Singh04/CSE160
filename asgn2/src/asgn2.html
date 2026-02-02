@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Assignment 2: Blocky Animal</title>
+</head>
+
+<body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+        Please use a browser that supports "canvas"
+    </canvas>
+
+    <p id="numdot">
+        FPS: 0
+    </p>
+    <br />
+    <p>
+        <button type="button" id="clearButton">Clear Canvas</button>
+    </p>
+
+    <p>
+        Walk Animation:
+        <button type="button" id="walkOn">ON</button>
+        <button type="button" id="walkOff">OFF</button>
+    </p>
+    <p>
+        Camera Angle <input type="range" min="0" max="360" value="0" id="angleSlide">
+    </p>
+
+    <p>
+        Arms <input type="range" min="-90" max="90" value="0" id="yellowSlide">
+        <button type="button" id="yellowOnButton">ON</button>
+        <button type="button" id="yellowOffButton">OFF</button>
+    </p>
+
+    <p>
+        Lower Arms <input type="range" min="-90" max="90" value="0" id="magentaSlide">
+        <button type="button" id="magentaOnButton">ON</button>
+        <button type="button" id="magentaOffButton">OFF</button>
+    </p>
+    <p>
+        Claw Joint <input type="range" min="-45" max="37" value="-45" class="slider" id="clawSlide">
+    </p>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="triangle.js"></script>
+    <script src="cube.js"></script>
+    <script src="blockyanimal.js"></script>
+</body>
+
+</html>
