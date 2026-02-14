@@ -57,6 +57,17 @@ var g_vertexBuffer = null;
 var g_uvBuffer = null;
 let u_Sampler2;
 
+
+let g_score = 0;
+let g_items = [
+    { x: 5, z: 5, active: true },
+    { x: 25, z: 25, active: true },
+    { x: 5, z: 25, active: true },
+    { x: 25, z: 5, active: true },
+    { x: 15, z: 15, active: true }
+];
+
+
 // Global UI Variables
 let g_globalAngle = 0;
 let g_globalAngleX = 0;
@@ -257,7 +268,9 @@ var g_seconds = performance.now() / 1000.0;
 
 function tick() {
     g_seconds = (performance.now() - g_startTime) / 1000.0;
-    updateAnimationAngles();
+
+    checkCollection(); // Check if we grabbed a diamond!
+
     renderScene();
     requestAnimationFrame(tick);
 }
@@ -340,6 +353,34 @@ function renderScene() {
     ground.render();
 
     drawMap();
+
+
+    // --- MINI-GAME: DRAW DIAMONDS ---
+    let diamond = new Cube();
+    diamond.color = [0.0, 1.0, 1.0, 1.0]; // Bright Cyan
+    diamond.textureNum = -2; // Solid color
+
+    for (let i = 0; i < g_items.length; i++) {
+        if (g_items[i].active) {
+            diamond.matrix.setIdentity();
+
+            let mapX = g_items[i].x;
+            let mapZ = g_items[i].z;
+
+            // Read the 2D array to find out how tall the hill is here
+            let terrainHeight = g_map[mapX][mapZ];
+
+            let bobbing = Math.sin(g_seconds * 3) * 0.2;
+
+            // NEW: Added "+ 1.5" so the diamond floats higher above the terrain
+            diamond.matrix.translate(mapX - 16, (terrainHeight - 0.75) + 1.5 + bobbing, mapZ - 16);
+
+            diamond.matrix.rotate(g_seconds * 50, 0, 1, 0); // Spin constantly
+            diamond.matrix.scale(0.3, 0.3, 0.3); // Make them small
+
+            diamond.renderFast();
+        }
+    }
 
     var duration = performance.now() - startTime;
     sendTextToHTML("FPS: " + Math.floor(10000 / duration) / 10, "numdot");
@@ -516,15 +557,15 @@ function onMove(ev) {
 }
 
 function initMap() {
-    // Loop through all 32x32 coordinates
     for (let x = 0; x < 32; x++) {
         g_map[x] = [];
         for (let z = 0; z < 32; z++) {
-            // Check if we are on the outer edge of the map
             if (x === 0 || x === 31 || z === 0 || z === 31) {
-                g_map[x][z] = 10; // Wall is 10 blocks high
+                g_map[x][z] = 10; // Keep your giant boundary walls
             } else {
-                g_map[x][z] = 0;  // Inside is empty space
+                // Procedural Math Magic for rolling hills!
+                let height = Math.floor(Math.abs(Math.sin(x / 4) * Math.cos(z / 4)) * 5);
+                g_map[x][z] = height;
             }
         }
     }
@@ -583,6 +624,34 @@ function getBlockInFront() {
 
     return { x: mapX, z: mapZ };
 }
+
+function checkCollection() {
+    for (let i = 0; i < g_items.length; i++) {
+        if (g_items[i].active) {
+            // Offset the x/z by 16 to match your world space translation
+            let itemWorldX = g_items[i].x - 16;
+            let itemWorldZ = g_items[i].z - 16;
+
+            let dx = g_camera.eye.elements[0] - itemWorldX;
+            let dz = g_camera.eye.elements[2] - itemWorldZ;
+            let dist = Math.sqrt(dx * dx + dz * dz); // 2D distance formula
+
+            // If you get close enough, collect it!
+            if (dist < 1.5) {
+                g_items[i].active = false; // Hide the item
+                g_score++; // Increase score
+
+                // Update HTML
+                if (g_score >= 5) {
+                    sendTextToHTML("YOU WIN! All diamonds collected! 🎉", "score");
+                } else {
+                    sendTextToHTML("Diamonds Found: " + g_score + " / 5", "score");
+                }
+            }
+        }
+    }
+}
+
 
 
 function main() {
