@@ -48,7 +48,6 @@ class Cube {
         drawCubeFast(this.vertices, this.uvs);
     }
 
-    // Keeping your old render function intact just in case!
     render() {
         this.renderFast();
     }

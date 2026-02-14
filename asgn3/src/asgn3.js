@@ -135,7 +135,6 @@ function connectVariablesToGLSL() {
 }
 
 function addActionsForHtmlUI() {
-    // 1. Only wire up the buttons that actually exist in your new world.html
     let resetBtn = document.getElementById('resetButton');
     if (resetBtn) {
         resetBtn.onclick = function () { resetWorld(); };
@@ -610,7 +609,7 @@ function getBlockInFront() {
 function checkCollection() {
     for (let i = 0; i < g_items.length; i++) {
         if (g_items[i].active) {
-            // Offset the x/z by 16 to match your world space translation
+            
             let itemWorldX = g_items[i].x - 16;
             let itemWorldZ = g_items[i].z - 16;
 

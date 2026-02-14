@@ -6,27 +6,65 @@
     <title>Assignment 3: Virtual World</title>
 </head>
 
-<body onload="main()" style="display: flex; gap: 50px; align-items: flex-start; padding: 20px;">
+<body onload="main()"
+    style="display: grid; grid-template-columns: 1fr 350px; gap: 40px; padding: 40px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: #f0f0f0;">
 
-    <div id="canvas-container">
-        <canvas id="webgl" width="400" height="400">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <canvas id="webgl" width="600" height="600"
+            style="border: 4px solid #444; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             Please use a browser that supports "canvas"
         </canvas>
+        <p id="numdot" style="margin-top: 15px; font-weight: bold; color: #00ff88;">FPS: 0</p>
+    </div>
 
-        <p><b>Controls:</b> Click the canvas to lock mouse. Press ESC to exit.</p>
-        <p><b>W, A, S, D:</b> Move | <b>Mouse:</b> Look around | <b>R/T:</b> Fly Up/Down</p>
-        <p><b>Z:</b> Place Block | <b>X:</b> Break Block</p>
+    <div
+        style="background: #2a2a2a; padding: 25px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
 
-        <h2 id="score">Diamonds Found: 0 / 5</h2>
-        <p id="numdot">FPS: 0</p>
+        <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #00d4ff;">Diamond Hunt</h1>
+        <p style="margin: 0; font-style: italic; color: #ccc;">Rescue the 5 ancient diamonds scattered across the seeded
+            peaks!</p>
+        <h2 id="score"
+            style="background: #00d4ff; color: #1a1a1a; padding: 10px; border-radius: 6px; text-align: center; margin: 20px 0;">
+            Diamonds Found: 0 / 5
+        </h2>
 
-        <p>
-            <label for="seedInput"><b>World Seed: </b></label>
-            <input type="text" id="seedInput" value="BaseWorld">
-            <button type="button" onclick="applySeed()">Generate World</button>
-            <button type="button" onclick="resetWorld()">Reset to Base</button>
+        <div style="border-left: 4px solid #ffcc00; padding-left: 15px; margin-bottom: 25px;">
+            <b style="color: #ffcc00; text-transform: uppercase; font-size: 12px;">The "Wow!" Factor</b>
+            <p style="margin: 5px 0 0 0; font-size: 14px; line-height: 1.4;">
+                This world is <b>procedurally generated</b> using a custom math-based noise algorithm. Every string you
+                type creates a unique 3D landscape of hills and valleys.
+            </p>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <label for="seedInput" style="display: block; margin-bottom: 8px; font-weight: bold;">World Seed</label>
+            <input type="text" id="seedInput" value="BaseWorld"
+                style="width: 100%; padding: 10px; border-radius: 4px; border: none; background: #444; color: white; box-sizing: border-box; margin-bottom: 10px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="applySeed()"
+                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #00d4ff; font-weight: bold; cursor: pointer;">Generate</button>
+                <button onclick="resetWorld()"
+                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #666; color: white; cursor: pointer;">Reset</button>
+            </div>
+        </div>
+
+        <div style="background: #333; padding: 15px; border-radius: 6px; font-size: 13px;">
+            <b style="color: #00ff88;">CONTROLS</b>
+            <ul style="padding-left: 20px; margin: 8px 0;">
+                <li><b>W/A/S/D:</b> Move Around</li>
+                <li><b>Q/E:</b> Rotate Left/Right (Rubric Req)</li>
+                <li><b>R/T:</b> Fly Up / Fly Down</li>
+                <li><b>Z/X:</b> Build / Break Blocks</li>
+                <li><b>Mouse:</b> Click canvas for FPS Look</li>
+            </ul>
+        </div>
+
+        <p style="text-align: center; margin-top: 20px;">
+            <button type="button" id="resetButton"
+                style="background: none; border: 1px solid #666; color: #888; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                Emergency Reset
+            </button>
         </p>
-
     </div>
 
     <script src="../lib/webgl-utils.js"></script>
