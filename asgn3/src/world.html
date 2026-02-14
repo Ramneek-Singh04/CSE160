@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Assignment 3: Virtual World</title>
+</head>
+
+<body onload="main()" style="display: flex; gap: 50px; align-items: flex-start; padding: 20px;">
+
+    <div id="canvas-container">
+        <canvas id="webgl" width="400" height="400">
+            Please use a browser that supports "canvas"
+        </canvas>
+
+        <p id="numdot">
+            FPS: 0
+        </p>
+
+        <p>
+            <button type="button" id="resetButton">Reset All</button>
+        </p>
+
+        <p>
+            <b>Controls:</b> Click & Drag to rotate | Shift+Click to Poke!
+        </p>
+
+        <p>
+            Global Animation:
+            <button type="button" id="walkOn">ON</button>
+            <button type="button" id="walkOff">OFF</button>
+        </p>
+
+        <p>
+            Global Rotation <input type="range" min="0" max="360" value="0" class="slider" id="angleSlide">
+        </p>
+
+        <p>
+            Shoulder <input type="range" min="-90" max="90" value="0" class="slider" id="yellowSlide">
+        </p>
+
+        <p>
+            Elbow <input type="range" min="-90" max="90" value="0" class="slider" id="magentaSlide">
+        </p>
+
+        <p>
+            Claw Extension <input type="range" min="-45" max="37" value="-45" class="slider" id="clawSlide">
+        </p>
+    </div>
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="triangle.js"></script>
+    <script src="cube.js"></script>
+    <script src="asgn3.js"></script>
+    <script src="Camera.js"></script>
+</body>
+
+</html>
