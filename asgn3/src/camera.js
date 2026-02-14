@@ -2,9 +2,9 @@ class Camera {
     constructor() {
         this.fov = 60;
 
-        // NEW: Raised Y-axis to 1.5 so we don't spawn in the floor
-        this.eye = new Vector3([0, 1.5, 3]);
-        this.at = new Vector3([0, 1.5, -100]);
+        // NEW: Spawn at Y = 10 to stay above the 4-block high hills
+        this.eye = new Vector3([0, 10, 3]);
+        this.at = new Vector3([0, 10, -100]);
         this.up = new Vector3([0, 1, 0]);
 
         this.viewMatrix = new Matrix4();

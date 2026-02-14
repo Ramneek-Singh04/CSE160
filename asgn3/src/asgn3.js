@@ -58,6 +58,8 @@ var g_uvBuffer = null;
 let u_Sampler2;
 
 
+const BASE_SEED = 1337;
+let g_worldSeed = BASE_SEED;
 let g_score = 0;
 let g_items = [
     { x: 5, z: 5, active: true },
@@ -133,43 +135,16 @@ function connectVariablesToGLSL() {
 }
 
 function addActionsForHtmlUI() {
-    document.getElementById('walkOn').onclick = function () { g_walkAnimation = true; };
-    document.getElementById('walkOff').onclick = function () { g_walkAnimation = false; };
+    // 1. Only wire up the buttons that actually exist in your new world.html
+    let resetBtn = document.getElementById('resetButton');
+    if (resetBtn) {
+        resetBtn.onclick = function () { resetWorld(); };
+    }
 
-    document.getElementById('resetButton').onclick = function () {
-        g_globalAngle = 0;
-        g_globalAngleX = 0;
-        g_yellowAngle = 0;
-        g_magentaAngle = 0;
-        g_clawAngle = 0;
-        g_headAngle = 0;
-        g_bodyAngle = 0;
-        g_walkAnimation = false;
-        g_pokeAnimation = false;
+    // 2. The 'walkOn', 'walkOff', and sliders were deleted from the HTML.
+    // We must stop trying to call getElementById for them, or the script crashes.
 
-        document.getElementById('angleSlide').value = 0;
-        document.getElementById('yellowSlide').value = 0;
-        document.getElementById('magentaSlide').value = 0;
-        document.getElementById('clawSlide').value = 0;
-
-        renderScene();
-    };
-
-    document.getElementById('angleSlide').addEventListener('mousemove', function () {
-        g_globalAngle = parseInt(this.value);
-        renderScene();
-    });
-
-    document.getElementById('yellowSlide').addEventListener('mousemove', function () {
-        g_yellowAngle = this.value; renderScene();
-    });
-    document.getElementById('magentaSlide').addEventListener('mousemove', function () {
-        g_magentaAngle = this.value; renderScene();
-    });
-    document.getElementById('clawSlide').addEventListener('mousemove', function () {
-        g_clawAngle = this.value; renderScene();
-    });
-
+    // 3. Keep this line to handle mouse movement if you haven't moved it to main()
     initEventHandlers(canvas, g_globalAngle, g_globalAngleX);
 }
 
@@ -561,16 +536,27 @@ function initMap() {
         g_map[x] = [];
         for (let z = 0; z < 32; z++) {
             if (x === 0 || x === 31 || z === 0 || z === 31) {
-                g_map[x][z] = 10; // Keep your giant boundary walls
+                g_map[x][z] = 10;
             } else {
-                // Procedural Math Magic for rolling hills!
-                let height = Math.floor(Math.abs(Math.sin(x / 4) * Math.cos(z / 4)) * 5);
+                let offsetX = x + g_worldSeed;
+                let offsetZ = z + g_worldSeed;
+
+                let wave1 = Math.sin(offsetX / 4) * Math.cos(offsetZ / 4);
+                let wave2 = Math.sin((offsetX + offsetZ) / 8);
+
+                // 1. INCREASE MULTIPLIER: Changing 2.0 to 2.5 or 3.0 allows the math to reach 4 or 5
+                let height = Math.floor(Math.abs(wave1 + wave2) * 2.5);
+
+                // 2. INCREASE LIMIT: Change the cap from 3 to 4
+                if (height > 4) {
+                    height = 4;
+                }
+
                 g_map[x][z] = height;
             }
         }
     }
 }
-
 
 
 function drawCubeFast(vertices, uvs) {
@@ -643,7 +629,7 @@ function checkCollection() {
 
                 // Update HTML
                 if (g_score >= 5) {
-                    sendTextToHTML("YOU WIN! All diamonds collected! 🎉", "score");
+                    sendTextToHTML("YOU WIN! All diamonds collected!", "score");
                 } else {
                     sendTextToHTML("Diamonds Found: " + g_score + " / 5", "score");
                 }
@@ -651,6 +637,53 @@ function checkCollection() {
         }
     }
 }
+
+
+// --- WORLD GENERATOR FUNCTIONS ---
+function applySeed() {
+    let seedText = document.getElementById('seedInput').value;
+
+    // Convert text into a number (so you can type "Hello" or "Level1")
+    let newSeed = 0;
+    for (let i = 0; i < seedText.length; i++) {
+        newSeed += seedText.charCodeAt(i) * (i + 1);
+    }
+
+    regenerateWorld(newSeed);
+}
+
+function resetWorld() {
+    // Check if the element exists before trying to set its value
+    let input = document.getElementById('seedInput');
+    if (input) input.value = "BaseWorld";
+
+    // Call our generator with the original seed
+    regenerateWorld(1337);
+}
+
+function regenerateWorld(seed) {
+    g_worldSeed = seed;
+
+    // Rebuild the map array with the new seed
+    initMap();
+
+    // Reset the mini-game
+    g_score = 0;
+    for (let i = 0; i < g_items.length; i++) {
+        g_items[i].active = true;
+    }
+    sendTextToHTML("Diamonds Found: 0 / 5", "score");
+
+    // NEW: Reset the camera to the sky (Y = 10)
+    g_camera.eye = new Vector3([0, 10, 3]);
+    g_camera.at = new Vector3([0, 10, -100]);
+    g_camera.updateView();
+}
+
+
+
+
+
 
 
 
