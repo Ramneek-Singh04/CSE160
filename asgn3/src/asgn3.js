@@ -469,36 +469,32 @@ class Cone {
 
 
 function keydown(ev) {
-    if (ev.keyCode == 39 || ev.keyCode == 68) { // D
-        g_camera.moveRight();
-    } else if (ev.keyCode == 37 || ev.keyCode == 65) { // A
-        g_camera.moveLeft();
-    } else if (ev.keyCode == 38 || ev.keyCode == 87) { // W
-        g_camera.moveForward();
-    } else if (ev.keyCode == 40 || ev.keyCode == 83) { // S
-        g_camera.moveBackwards();
-    } else if (ev.keyCode == 82) { // R
-        g_camera.moveUp();
-    } else if (ev.keyCode == 84) { // T
-        g_camera.moveDown();
-    }
+    // Movement
+    if (ev.keyCode == 87) g_camera.moveForward();    // W
+    else if (ev.keyCode == 83) g_camera.moveBackwards(); // S
+    else if (ev.keyCode == 65) g_camera.moveLeft();      // A
+    else if (ev.keyCode == 68) g_camera.moveRight();     // D
+    else if (ev.keyCode == 82) g_camera.moveUp();        // R
+    else if (ev.keyCode == 84) g_camera.moveDown();      // T
 
-    // --- SIMPLE MINECRAFT ---
-    else if (ev.keyCode == 90) { // Z: Place a Block
+    // --- RUBRIC REQUIREMENT: Q/E for Rotation ---
+    else if (ev.keyCode == 81) g_camera.panLeft(5);  // Q: Rotate Left
+    else if (ev.keyCode == 69) g_camera.panRight(5); // E: Rotate Right
+
+    // --- SIMPLE MINECRAFT: Z/X for Building ---
+    else if (ev.keyCode == 90) { // Z: Place Block
         let target = getBlockInFront();
         if (target.x >= 0 && target.x < 32 && target.z >= 0 && target.z < 32) {
-            g_map[target.x][target.z] += 1;
+            g_map[target.x][target.z] = Math.min(g_map[target.x][target.z] + 1, 10);
         }
-    } else if (ev.keyCode == 88) { // X: Break a Block
+    } else if (ev.keyCode == 88) { // X: Break Block
         let target = getBlockInFront();
         if (target.x >= 0 && target.x < 32 && target.z >= 0 && target.z < 32) {
-            if (g_map[target.x][target.z] > 0) {
-                g_map[target.x][target.z] -= 1;
-            }
+            g_map[target.x][target.z] = Math.max(g_map[target.x][target.z] - 1, 0);
         }
     }
 
-    renderScene(); // Redraw the scene to show the updated map
+    renderScene();
 }
 
 
