@@ -19,7 +19,8 @@ var FSHADER_SOURCE = `
   varying vec2 v_UV;
   uniform vec4 u_FragColor;
   uniform sampler2D u_Sampler0;
-  uniform sampler2D u_Sampler1; // NEW: Second texture sampler
+  uniform sampler2D u_Sampler1;
+  uniform sampler2D u_Sampler2; // NEW: Third texture sampler
   uniform int u_whichTexture;
   void main() {
     if (u_whichTexture == -2) {
@@ -27,9 +28,11 @@ var FSHADER_SOURCE = `
     } else if (u_whichTexture == -1) {
         gl_FragColor = vec4(v_UV, 1.0, 1.0);         
     } else if (u_whichTexture == 0) {
-        gl_FragColor = texture2D(u_Sampler0, v_UV);  // Use texture0 (Sky)
+        gl_FragColor = texture2D(u_Sampler0, v_UV);  // Sky
     } else if (u_whichTexture == 1) {
-        gl_FragColor = texture2D(u_Sampler1, v_UV);  // NEW: Use texture1 (Ground)
+        gl_FragColor = texture2D(u_Sampler1, v_UV);  // Wall Blocks
+    } else if (u_whichTexture == 2) {
+        gl_FragColor = texture2D(u_Sampler2, v_UV);  // NEW: Floor
     } else {
         gl_FragColor = vec4(1, 0.2, 0.2, 1);         
     }
@@ -50,6 +53,9 @@ let u_Sampler1; // NEW
 let u_whichTexture;
 let g_camera;
 var g_map = [];
+var g_vertexBuffer = null;
+var g_uvBuffer = null;
+let u_Sampler2;
 
 // Global UI Variables
 let g_globalAngle = 0;
@@ -109,6 +115,10 @@ function connectVariablesToGLSL() {
 
     u_whichTexture = gl.getUniformLocation(gl.program, 'u_whichTexture');
     if (!u_whichTexture) { console.log('Failed to get u_whichTexture'); return false; }
+    
+
+    u_Sampler2 = gl.getUniformLocation(gl.program, 'u_Sampler2');
+    if (!u_Sampler2) { console.log('Failed to get u_Sampler2'); return false; }
 }
 
 function addActionsForHtmlUI() {
@@ -323,7 +333,7 @@ function renderScene() {
     // --- STEP 8: GROUND PLANE ---
     var ground = new Cube();
     ground.color = [1.0, 1.0, 1.0, 1.0];
-    ground.textureNum = 1; // Use texture1 (Ground)
+    ground.textureNum = 2; // Use texture1 (Ground)
     ground.matrix.translate(0, -0.75, 0); // Move it down below the camera
     ground.matrix.scale(50, 0.01, 50); // Flatten it on the Y axis and stretch it on X and Z
     ground.matrix.translate(-0.5, 0, -0.5); // Center it
@@ -344,42 +354,50 @@ function sendTextToHTML(text, htmlID) {
     htmlElm.innerHTML = text;
 }
 
-function main() {
-    setupWebGL();
-    connectVariablesToGLSL();
-    addActionsForHtmlUI();
+// NEW: Create the map wall object ONCE outside the loop
+var g_mapWall = new Cube();
+g_mapWall.textureNum = 1;
 
-    g_camera = new Camera();
-    document.onkeydown = keydown;
+function drawMap() {
+    for (let x = 0; x < 32; x++) {
+        for (let z = 0; z < 32; z++) {
+            let height = g_map[x][z];
 
-    initMap(); // NEW: Initialize the 32x32 array first!
-    initTextures();
-
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    requestAnimationFrame(tick);
+            for (let y = 0; y < height; y++) {
+                // REUSE the same cube, just change its matrix
+                g_mapWall.matrix.setIdentity(); // Reset the matrix
+                g_mapWall.matrix.translate(x - 16, y - 0.75, z - 16);
+                g_mapWall.renderFast(); // Call the new fast render method!
+            }
+        }
+    }
 }
 
-// --- TEXTURE LOADING ---
+
 // --- TEXTURE LOADING ---
 function initTextures() {
-    // Load Texture 0 (Sky)
     var image0 = new Image();
-    if (!image0) { console.log('Failed to create the image0 object'); return false; }
+    if (!image0) { console.log('Failed to create image0'); return false; }
     image0.onload = function () { sendTextureToGLSL(image0, u_Sampler0, 0); };
-    image0.src = 'sky.png'; // Make sure this matches your file extension!
+    image0.src = 'sky.png';
 
-    // Load Texture 1 (Ground)
     var image1 = new Image();
-    if (!image1) { console.log('Failed to create the image1 object'); return false; }
+    if (!image1) { console.log('Failed to create image1'); return false; }
     image1.onload = function () { sendTextureToGLSL(image1, u_Sampler1, 1); };
     image1.src = 'ground.png';
+
+    // NEW: Load Texture 2 (Floor)
+    var image2 = new Image();
+    if (!image2) { console.log('Failed to create image2'); return false; }
+    image2.onload = function () { sendTextureToGLSL(image2, u_Sampler2, 2); };
+    image2.src = 'floor.png';
 
     return true;
 }
 
 function sendTextureToGLSL(image, u_Sampler, texUnit) {
     var texture = gl.createTexture();
-    if (!texture) { console.log('Failed to create the texture object'); return false; }
+    if (!texture) { console.log('Failed to create texture object'); return false; }
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
 
@@ -388,6 +406,8 @@ function sendTextureToGLSL(image, u_Sampler, texUnit) {
         gl.activeTexture(gl.TEXTURE0);
     } else if (texUnit == 1) {
         gl.activeTexture(gl.TEXTURE1);
+    } else if (texUnit == 2) {
+        gl.activeTexture(gl.TEXTURE2); // NEW: Unit 2
     }
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -433,27 +453,67 @@ class Cone {
 
 
 function keydown(ev) {
-    if (ev.keyCode == 39 || ev.keyCode == 68) { // Right Arrow or D
+    if (ev.keyCode == 39 || ev.keyCode == 68) { // D
         g_camera.moveRight();
-    } else if (ev.keyCode == 37 || ev.keyCode == 65) { // Left Arrow or A
+    } else if (ev.keyCode == 37 || ev.keyCode == 65) { // A
         g_camera.moveLeft();
-    } else if (ev.keyCode == 38 || ev.keyCode == 87) { // Up Arrow or W
+    } else if (ev.keyCode == 38 || ev.keyCode == 87) { // W
         g_camera.moveForward();
-    } else if (ev.keyCode == 40 || ev.keyCode == 83) { // Down Arrow or S
+    } else if (ev.keyCode == 40 || ev.keyCode == 83) { // S
         g_camera.moveBackwards();
-    } else if (ev.keyCode == 81) { // Q
-        g_camera.panLeft();
-    } else if (ev.keyCode == 69) { // E
-        g_camera.panRight();
     } else if (ev.keyCode == 82) { // R
         g_camera.moveUp();
     } else if (ev.keyCode == 84) { // T
         g_camera.moveDown();
     }
 
-    // renderScene(); // Ensure the scene redraws when we move
+    // --- SIMPLE MINECRAFT ---
+    else if (ev.keyCode == 90) { // Z: Place a Block
+        let target = getBlockInFront();
+        if (target.x >= 0 && target.x < 32 && target.z >= 0 && target.z < 32) {
+            g_map[target.x][target.z] += 1;
+        }
+    } else if (ev.keyCode == 88) { // X: Break a Block
+        let target = getBlockInFront();
+        if (target.x >= 0 && target.x < 32 && target.z >= 0 && target.z < 32) {
+            if (g_map[target.x][target.z] > 0) {
+                g_map[target.x][target.z] -= 1;
+            }
+        }
+    }
+
+    renderScene(); // Redraw the scene to show the updated map
 }
 
+
+// Keep track of the old mouse location
+let g_lastX = -1;
+
+function onMove(ev) {
+    // Only rotate the camera if the mouse is locked to the canvas
+    if (document.pointerLockElement === canvas) {
+        let deltaX = ev.movementX;
+        let deltaY = ev.movementY; // NEW: Get vertical mouse movement
+
+        let sensitivity = 0.3; // Lowered slightly for smoother FPS controls
+
+        // Horizontal Rotation (Yaw)
+        if (deltaX > 0) {
+            g_camera.panRight(deltaX * sensitivity);
+        } else if (deltaX < 0) {
+            g_camera.panLeft(Math.abs(deltaX) * sensitivity);
+        }
+
+        // Vertical Rotation (Pitch)
+        if (deltaY > 0) {
+            g_camera.panDown(deltaY * sensitivity); // Mouse moved down
+        } else if (deltaY < 0) {
+            g_camera.panUp(Math.abs(deltaY) * sensitivity); // Mouse moved up
+        }
+
+        renderScene();
+    }
+}
 
 function initMap() {
     // Loop through all 32x32 coordinates
@@ -470,23 +530,82 @@ function initMap() {
     }
 }
 
-function drawMap() {
-    // Write a double loop to create a wall
-    for (let x = 0; x < 32; x++) {
-        for (let z = 0; z < 32; z++) {
 
-            let height = g_map[x][z];
 
-            // Include a third for loop to iterate on the height
-            for (let y = 0; y < height; y++) {
-                let wall = new Cube();
-                wall.textureNum = 1; // Use the ground/dirt texture
-
-                // Translate X and Z to center the 32x32 map around the camera
-                // Translate Y coordinates of the walls so they sit on the ground
-                wall.matrix.translate(x - 16, y - 0.75, z - 16);
-                wall.render();
-            }
-        }
+function drawCubeFast(vertices, uvs) {
+    // 1. Initialize buffers ONLY if they don't exist yet
+    if (g_vertexBuffer == null) {
+        g_vertexBuffer = gl.createBuffer();
+        if (!g_vertexBuffer) { console.log('Failed to create buffer'); return -1; }
     }
+    if (g_uvBuffer == null) {
+        g_uvBuffer = gl.createBuffer();
+        if (!g_uvBuffer) { console.log('Failed to create buffer'); return -1; }
+    }
+
+    // 2. Bind and send Vertex Data
+    gl.bindBuffer(gl.ARRAY_BUFFER, g_vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_Position);
+
+    // 3. Bind and send UV Data
+    gl.bindBuffer(gl.ARRAY_BUFFER, g_uvBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, uvs, gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_UV);
+
+    // 4. Draw all 36 vertices (12 triangles) in ONE call!
+    gl.drawArrays(gl.TRIANGLES, 0, 36);
 }
+
+
+
+function getBlockInFront() {
+    // 1. Calculate the forward direction vector
+    let f = new Vector3();
+    f.set(g_camera.at);
+    f.sub(g_camera.eye);
+    f.normalize();
+
+    // 2. Scale it to project "2 units" in front of the camera
+    f.mul(2);
+
+    // 3. Add this forward vector to our eye position to find the target point
+    let target = new Vector3();
+    target.set(g_camera.eye);
+    target.add(f);
+
+    // 4. Convert the 3D world coordinates back into 2D map array indices
+    // Since we translated our map by (x - 16, z - 16) when drawing, we reverse it by adding 16!
+    let mapX = Math.floor(target.elements[0] + 16);
+    let mapZ = Math.floor(target.elements[2] + 16);
+
+    return { x: mapX, z: mapZ };
+}
+
+
+function main() {
+    setupWebGL();
+    connectVariablesToGLSL();
+    addActionsForHtmlUI();
+
+    g_camera = new Camera();
+    document.onkeydown = keydown;
+
+    // NEW: Request Pointer Lock when you click the canvas
+    canvas.onclick = function () {
+        canvas.requestPointerLock();
+    };
+
+    // Listen for mouse movement
+    canvas.onmousemove = onMove;
+
+    initMap();
+    initTextures();
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    requestAnimationFrame(tick);
+}
+
+

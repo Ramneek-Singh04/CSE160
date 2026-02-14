@@ -2,15 +2,14 @@ class Camera {
     constructor() {
         this.fov = 60;
 
-        // These use the Vector3 class from your cuon-matrix.js library
-        this.eye = new Vector3([0, 0, 3]);   // Start a bit back so we can see the sloth
-        this.at = new Vector3([0, 0, -100]); // Look into the distance
-        this.up = new Vector3([0, 1, 0]);   // Y is up
+        // NEW: Raised Y-axis to 1.5 so we don't spawn in the floor
+        this.eye = new Vector3([0, 1.5, 3]);
+        this.at = new Vector3([0, 1.5, -100]);
+        this.up = new Vector3([0, 1, 0]);
 
         this.viewMatrix = new Matrix4();
         this.projectionMatrix = new Matrix4();
 
-        // Initialize the matrices immediately
         this.updateView();
         this.updateProjection();
     }
@@ -104,6 +103,46 @@ class Camera {
 
         var rotationMatrix = new Matrix4();
         rotationMatrix.setRotate(-alpha, this.up.elements[0], this.up.elements[1], this.up.elements[2]);
+
+        var f_prime = rotationMatrix.multiplyVector3(f);
+
+        this.at.set(this.eye);
+        this.at.add(f_prime);
+        this.updateView();
+    }
+
+
+    panUp(alpha = 5) {
+        var f = new Vector3();
+        f.set(this.at);
+        f.sub(this.eye);
+
+        // Find the "right" vector using the cross product
+        var right = Vector3.cross(f, this.up);
+        right.normalize();
+
+        var rotationMatrix = new Matrix4();
+        // Rotate around the "right" axis
+        rotationMatrix.setRotate(alpha, right.elements[0], right.elements[1], right.elements[2]);
+
+        var f_prime = rotationMatrix.multiplyVector3(f);
+
+        this.at.set(this.eye);
+        this.at.add(f_prime);
+        this.updateView();
+    }
+
+    panDown(alpha = 5) {
+        var f = new Vector3();
+        f.set(this.at);
+        f.sub(this.eye);
+
+        var right = Vector3.cross(f, this.up);
+        right.normalize();
+
+        var rotationMatrix = new Matrix4();
+        // Rotate in the opposite direction
+        rotationMatrix.setRotate(-alpha, right.elements[0], right.elements[1], right.elements[2]);
 
         var f_prime = rotationMatrix.multiplyVector3(f);
 
