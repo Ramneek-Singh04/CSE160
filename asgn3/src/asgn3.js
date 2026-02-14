@@ -593,13 +593,12 @@ function getBlockInFront() {
     // 2. Scale it to project "2 units" in front of the camera
     f.mul(2);
 
-    // 3. Add this forward vector to our eye position to find the target point
+
     let target = new Vector3();
     target.set(g_camera.eye);
     target.add(f);
 
     // 4. Convert the 3D world coordinates back into 2D map array indices
-    // Since we translated our map by (x - 16, z - 16) when drawing, we reverse it by adding 16!
     let mapX = Math.floor(target.elements[0] + 16);
     let mapZ = Math.floor(target.elements[2] + 16);
 

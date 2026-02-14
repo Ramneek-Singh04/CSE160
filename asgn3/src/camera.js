@@ -117,12 +117,12 @@ class Camera {
         f.set(this.at);
         f.sub(this.eye);
 
-        // Find the "right" vector using the cross product
+
         var right = Vector3.cross(f, this.up);
         right.normalize();
 
         var rotationMatrix = new Matrix4();
-        // Rotate around the "right" axis
+
         rotationMatrix.setRotate(alpha, right.elements[0], right.elements[1], right.elements[2]);
 
         var f_prime = rotationMatrix.multiplyVector3(f);
