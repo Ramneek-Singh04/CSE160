@@ -1,1 +1,2 @@
-Hello CSE160!
+
+I used Gemini as a reference for higher-level architectural decisions and procedural math concepts. While I handled the core WebGL implementation, coordinate mapping, and game logic, Gemini was helpful for quickly verifying syntax and refining the wave-based math used in the terrain generation. It served as a technical reference for specific performance optimization techniques, such as buffer pre-allocation, and provided a second look at the UI layout to ensure all rubric requirements were clearly visible.
