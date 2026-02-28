@@ -137,6 +137,7 @@ let canvas, gl, a_Position, a_UV, a_Normal;
 let u_FragColor, u_ModelMatrix, u_GlobalRotationMatrix, u_ViewMatrix, u_ProjectionMatrix, u_NormalMatrix;
 let u_Sampler0, u_Sampler1, u_Sampler2, u_whichTexture;
 let u_LightPos, u_cameraPos, u_lightColor, u_lightOn;
+let g_bunny;
 
 
 let g_camera;
@@ -290,6 +291,8 @@ function renderScene() {
     ground.matrix.translate(-0.5, 0, -0.5);
     ground.renderFast();
 
+    drawMap();
+
     // --- TEST CUBE ---
     var testCube = new Cube();
     testCube.color = [1.0, 0.0, 0.0, 1.0];
@@ -305,6 +308,21 @@ function renderScene() {
     sphere.matrix.translate(1.0, -0.2, -0.5);
     sphere.matrix.scale(0.5, 0.5, 0.5);
     sphere.renderFast();
+
+
+    // --- OBJ MODEL (STANFORD BUNNY) ---
+    // The Stanford Bunny model is usually very large, so we scale it down heavily
+    if (g_bunny) {
+        if (g_normalOn) {
+            g_bunny.textureNum = -3;
+        } else {
+            g_bunny.textureNum = -2; // Solid color mode
+        }
+        g_bunny.matrix.setIdentity();
+        g_bunny.matrix.translate(-1.5, -0.75, -0.5); // Place it to the left of the cube
+        g_bunny.matrix.scale(0.25, 0.25, 0.25); // Scale it down (adjust based on actual model size)
+        g_bunny.renderFast();
+    }
 
     // --- LIGHT INDICATOR ---
     var light = new Cube();
@@ -327,6 +345,31 @@ function renderScene() {
 
     var duration = performance.now() - startTime;
     sendTextToHTML("FPS: " + Math.floor(10000 / duration) / 10, "numdot");
+}
+
+
+function drawMap() {
+    var wall = new Cube();
+    if (g_normalOn) {
+        wall.textureNum = -3;
+    } else {
+        wall.textureNum = 1; // Assuming 1 is your wall texture
+    }
+
+    // Loop through the 32x32 grid edges
+    for (let x = 0; x < 32; x++) {
+        for (let z = 0; z < 32; z++) {
+            if (x === 0 || x === 31 || z === 0 || z === 31) {
+                // NEW: Loop to stack the blocks 3 high!
+                for (let y = 0; y < 3; y++) {
+                    wall.matrix.setIdentity();
+                    // Place the block, stacking it up on the Y axis
+                    wall.matrix.translate(x - 16, y - 0.75, z - 16);
+                    wall.renderFast();
+                }
+            }
+        }
+    }
 }
 
 function sendTextToHTML(text, htmlID) {
@@ -437,5 +480,6 @@ function main() {
     initTextures();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    g_bunny = new Model('bunny.obj', [0.26, 0.15, 0.09, 1.0]);
     requestAnimationFrame(tick);
 }
