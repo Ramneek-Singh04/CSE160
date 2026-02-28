@@ -199,15 +199,60 @@ function connectVariablesToGLSL() {
 }
 
 function addActionsForHtmlUI() {
-    document.getElementById('normalOn').onclick = function () { g_normalOn = true; renderScene(); };
-    document.getElementById('normalOff').onclick = function () { g_normalOn = false; renderScene(); };
 
-    document.getElementById('lightOnBtn').onclick = function () { g_lightOn = true; renderScene(); };
-    document.getElementById('lightOffBtn').onclick = function () { g_lightOn = false; renderScene(); };
+    // NEW: Helper function to swap the active/inactive classes
+    function selectButton(activeId, inactiveId) {
+        document.getElementById(activeId).className = 'btn-active';
+        document.getElementById(inactiveId).className = 'btn-inactive';
+    }
 
-    document.getElementById('lightAnimOn').onclick = function () { g_lightAnimation = true; };
-    document.getElementById('lightAnimOff').onclick = function () { g_lightAnimation = false; };
+    // 1. Normal Visualization
+    document.getElementById('normalOn').onclick = function () {
+        g_normalOn = true;
+        selectButton('normalOn', 'normalOff');
+        renderScene();
+    };
+    document.getElementById('normalOff').onclick = function () {
+        g_normalOn = false;
+        selectButton('normalOff', 'normalOn');
+        renderScene();
+    };
 
+    // 2. Point Light ON/OFF
+    document.getElementById('pointLightOnBtn').onclick = function () {
+        g_lightOn = true;
+        selectButton('pointLightOnBtn', 'pointLightOffBtn');
+        renderScene();
+    };
+    document.getElementById('pointLightOffBtn').onclick = function () {
+        g_lightOn = false;
+        selectButton('pointLightOffBtn', 'pointLightOnBtn');
+        renderScene();
+    };
+
+    // 3. Spotlight ON/OFF
+    document.getElementById('spotLightOnBtn').onclick = function () {
+        g_spotLightOn = true;
+        selectButton('spotLightOnBtn', 'spotLightOffBtn');
+        renderScene();
+    };
+    document.getElementById('spotLightOffBtn').onclick = function () {
+        g_spotLightOn = false;
+        selectButton('spotLightOffBtn', 'spotLightOnBtn');
+        renderScene();
+    };
+
+    // 4. Light Animation
+    document.getElementById('lightAnimOn').onclick = function () {
+        g_lightAnimation = true;
+        selectButton('lightAnimOn', 'lightAnimOff');
+    };
+    document.getElementById('lightAnimOff').onclick = function () {
+        g_lightAnimation = false;
+        selectButton('lightAnimOff', 'lightAnimOn');
+    };
+
+    // 5. Light Color Picker
     document.getElementById('lightColor').addEventListener('input', function () {
         let hex = this.value;
         g_lightColor[0] = parseInt(hex.substring(1, 3), 16) / 255.0;
@@ -216,22 +261,22 @@ function addActionsForHtmlUI() {
         renderScene();
     });
 
+    // 6. Point Light Position Sliders
     document.getElementById('lightSlideX').oninput = function () { g_lightPos[0] = this.value / 100; renderScene(); };
     document.getElementById('lightSlideY').oninput = function () { g_lightPos[1] = this.value / 100; renderScene(); };
     document.getElementById('lightSlideZ').oninput = function () { g_lightPos[2] = this.value / 100; renderScene(); };
 
-
-    document.getElementById('spotLightOnBtn').onclick = function () { g_spotLightOn = true; renderScene(); };
-    document.getElementById('spotLightOffBtn').onclick = function () { g_spotLightOn = false; renderScene(); };
-    
+    // 7. Spotlight Position Sliders
     document.getElementById('spotLightX').oninput = function () { g_spotLightPos[0] = this.value / 100; renderScene(); };
     document.getElementById('spotLightY').oninput = function () { g_spotLightPos[1] = this.value / 100; renderScene(); };
     document.getElementById('spotLightZ').oninput = function () { g_spotLightPos[2] = this.value / 100; renderScene(); };
-    
+
+    // 8. Spotlight Direction Sliders
     document.getElementById('spotDirX').oninput = function () { g_spotLightDir[0] = this.value / 100; renderScene(); };
     document.getElementById('spotDirY').oninput = function () { g_spotLightDir[1] = this.value / 100; renderScene(); };
     document.getElementById('spotDirZ').oninput = function () { g_spotLightDir[2] = this.value / 100; renderScene(); };
-    
+
+    // 9. Spotlight Cutoff Slider
     document.getElementById('spotCutoff').oninput = function () { g_spotLightCutoff = this.value; renderScene(); };
 }
 

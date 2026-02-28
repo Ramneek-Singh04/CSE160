@@ -1,237 +1,200 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
-
-
 <head>
-
     <meta charset="utf-8" />
-
     <title>Assignment 4: Lighting</title>
+    <style>
+        /* Sleek Custom Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            margin-bottom: 15px;
+        }
 
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #555;
+            border-radius: 2px;
+        }
+
+        /* UI Grouping Cards */
+        .control-card {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #00d4ff;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .slider-label {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 5px;
+            display: block;
+            font-weight: bold;
+        }
+
+        /* Toggle Buttons - UPDATED TO ACTIVE/INACTIVE */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-active {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background: #00ff88;
+            color: #1a1a1a;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-active:hover {
+            background: #00cc6a;
+        }
+
+        .btn-inactive {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background: #555;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-inactive:hover {
+            background: #666;
+        }
+    </style>
 </head>
 
-
-
 <body onload="main()"
-    style="display: grid; grid-template-columns: 1fr 350px; gap: 40px; padding: 40px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: #f0f0f0;">
-
-
+    style="display: grid; grid-template-columns: 1fr 400px; gap: 40px; padding: 40px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: #f0f0f0;">
 
     <div style="display: flex; flex-direction: column; align-items: center;">
-
         <canvas id="webgl" width="600" height="600"
             style="border: 4px solid #444; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-
             Please use a browser that supports "canvas"
-
         </canvas>
-
         <p id="numdot" style="margin-top: 15px; font-weight: bold; color: #00ff88;">FPS: 0</p>
-
     </div>
-
-
 
     <div
         style="background: #2a2a2a; padding: 25px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
 
+        <h1 style="margin: 0 0 20px 0; font-size: 26px; color: #00ff88;">Lighting Engine</h1>
 
-
-        <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #00d4ff;">Lighting Controls</h1>
-
-
-
-        <div style="margin-bottom: 20px;">
-
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Global Lighting</label>
-
-            <div style="display: flex; gap: 10px;">
-
-                <button id="lightOnBtn"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #00ff88; color: #1a1a1a; font-weight: bold; cursor: pointer;">Light
-
-                    ON</button>
-
-                <button id="lightOffBtn"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #666; color: white; cursor: pointer;">Light
-
-                    OFF</button>
-
+        <div class="control-card">
+            <h2 class="card-title">Point Light</h2>
+            <div class="btn-row">
+                <button id="pointLightOnBtn" class="btn-active">Point ON</button>
+                <button id="pointLightOffBtn" class="btn-inactive">Point OFF</button>
+            </div>
+            <div class="btn-row">
+                <button id="lightAnimOn" class="btn-active">Anim ON</button>
+                <button id="lightAnimOff" class="btn-inactive">Anim OFF</button>
             </div>
 
-        </div>
-
-
-
-        <div style="margin-bottom: 20px;">
-
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Spotlight</label>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-
-                <button id="spotLightOnBtn"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #00ff88; color: #1a1a1a; font-weight: bold; cursor: pointer;">Spot
-
-                    ON</button>
-
-                <button id="spotLightOffBtn"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #666; color: white; cursor: pointer;">Spot
-
-                    OFF</button>
-
-            </div>
-
-
-            <label style="font-size: 12px; color: #aaa;">Position X/Y/Z</label>
-
-            <input type="range" id="spotLightX" min="-250" max="250" value="0" class="slider" style="width: 100%;">
-
-            <input type="range" id="spotLightY" min="-250" max="250" value="200" class="slider" style="width: 100%;">
-
-            <input type="range" id="spotLightZ" min="-250" max="250" value="0" class="slider"
-                style="width: 100%; margin-bottom: 10px;">
-
-
-            <label style="font-size: 12px; color: #aaa;">Direction X/Y/Z</label>
-
-            <input type="range" id="spotDirX" min="-100" max="100" value="0" class="slider" style="width: 100%;">
-
-            <input type="range" id="spotDirY" min="-100" max="100" value="-100" class="slider" style="width: 100%;">
-
-            <input type="range" id="spotDirZ" min="-100" max="100" value="0" class="slider"
-                style="width: 100%; margin-bottom: 10px;">
-
-
-            <label style="font-size: 12px; color: #aaa;">Cutoff Angle</label>
-
-            <input type="range" id="spotCutoff" min="10" max="90" value="30" class="slider" style="width: 100%;">
-
-        </div>
-
-
-
-        <div style="margin-bottom: 20px;">
-
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Light Animation</label>
-
-            <div style="display: flex; gap: 10px;">
-
-                <button id="lightAnimOn"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #00ff88; color: #1a1a1a; font-weight: bold; cursor: pointer;">Anim
-
-                    ON</button>
-
-                <button id="lightAnimOff"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #666; color: white; cursor: pointer;">Anim
-
-                    OFF</button>
-
-            </div>
-
-        </div>
-
-
-
-        <div style="margin-bottom: 20px;">
-
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Light Color</label>
-
+            <label class="slider-label">Light Color</label>
             <input type="color" id="lightColor" value="#ffffff"
-                style="width: 100%; height: 40px; border: none; border-radius: 4px; cursor: pointer;">
+                style="width: 100%; height: 35px; border: none; border-radius: 4px; cursor: pointer; background: transparent; margin-bottom: 15px;">
 
+            <label class="slider-label">Position X</label>
+            <input type="range" id="lightSlideX" min="-250" max="250" value="0">
+            <label class="slider-label">Position Y</label>
+            <input type="range" id="lightSlideY" min="-250" max="250" value="100">
+            <label class="slider-label">Position Z</label>
+            <input type="range" id="lightSlideZ" min="-250" max="250" value="-50" style="margin-bottom: 0;">
         </div>
 
-
-
-        <div style="margin-bottom: 20px;">
-
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Light Position (X, Y, Z)</label>
-
-            <input type="range" id="lightSlideX" min="-250" max="250" value="0" class="slider"
-                style="width: 100%; margin-bottom: 5px;">
-
-            <input type="range" id="lightSlideY" min="-250" max="250" value="100" class="slider"
-                style="width: 100%; margin-bottom: 5px;">
-
-            <input type="range" id="lightSlideZ" min="-250" max="250" value="-50" class="slider" style="width: 100%;">
-
-        </div>
-
-
-
-        <div style="margin-bottom: 20px;">
-
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Normal Visualization</label>
-
-            <div style="display: flex; gap: 10px;">
-
-                <button id="normalOn"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #00ff88; color: #1a1a1a; font-weight: bold; cursor: pointer;">Normals
-
-                    ON</button>
-
-                <button id="normalOff"
-                    style="flex: 1; padding: 10px; border: none; border-radius: 4px; background: #666; color: white; cursor: pointer;">Normals
-
-                    OFF</button>
-
+        <div class="control-card">
+            <h2 class="card-title">Spotlight</h2>
+            <div class="btn-row">
+                <button id="spotLightOnBtn" class="btn-active">Spot ON</button>
+                <button id="spotLightOffBtn" class="btn-inactive">Spot OFF</button>
             </div>
 
+            <label class="slider-label">Position X / Y / Z</label>
+            <input type="range" id="spotLightX" min="-250" max="250" value="0">
+            <input type="range" id="spotLightY" min="-250" max="250" value="200">
+            <input type="range" id="spotLightZ" min="-250" max="250" value="0">
+
+            <label class="slider-label">Direction X / Y / Z</label>
+            <input type="range" id="spotDirX" min="-100" max="100" value="0">
+            <input type="range" id="spotDirY" min="-100" max="100" value="-100">
+            <input type="range" id="spotDirZ" min="-100" max="100" value="0">
+
+            <label class="slider-label">Cutoff Angle</label>
+            <input type="range" id="spotCutoff" min="10" max="90" value="30" style="margin-bottom: 0;">
         </div>
 
+        <div class="control-card" style="margin-bottom: 0;">
+            <h2 class="card-title">Debug</h2>
+            <div class="btn-row" style="margin-bottom: 15px;">
+                <button id="normalOn" class="btn-inactive">Normals ON</button>
+                <button id="normalOff" class="btn-active">Normals OFF</button>
+            </div>
 
-
-        <div style="background: #333; padding: 15px; border-radius: 6px; font-size: 13px;">
-
-            <b style="color: #00ff88;">CONTROLS</b>
-
-            <ul style="padding-left: 20px; margin: 8px 0;">
-
-                <li><b>W/A/S/D:</b> Move Around</li>
-
-                <li><b>Q/E:</b> Rotate Left/Right</li>
-
-                <li><b>R/T:</b> Fly Up / Fly Down</li>
-
-                <li><b>Mouse:</b> Click canvas to look around</li>
-
-            </ul>
-
+            <div style="background: #111; padding: 15px; border-radius: 6px; font-size: 13px; border: 1px solid #222;">
+                <b style="color: #00d4ff;">CONTROLS</b>
+                <ul style="padding-left: 20px; margin: 8px 0; color: #ccc;">
+                    <li><b>W/A/S/D:</b> Move Around</li>
+                    <li><b>Q/E:</b> Rotate Left/Right</li>
+                    <li><b>R/T:</b> Fly Up / Fly Down</li>
+                    <li><b>Mouse:</b> Click canvas to look around</li>
+                </ul>
+            </div>
         </div>
 
     </div>
 
-
-
     <script src="../lib/webgl-utils.js"></script>
-
     <script src="../lib/webgl-debug.js"></script>
-
     <script src="../lib/cuon-utils.js"></script>
-
     <script src="../lib/cuon-matrix.js"></script>
-
     <script src="triangle.js"></script>
-
     <script src="cube.js"></script>
-
     <script src="model.js"></script>
-
-    <script src="camera.js"></script>
-
     <script src="sphere.js"></script>
-
     <script src="camera.js"></script>
-
     <script src="asgn4.js"></script>
 
-
-
-
 </body>
-
-
 
 </html>
