@@ -22,6 +22,7 @@ var VSHADER_SOURCE = `
   }`;
 
 // Fragment Shader
+// Fragment Shader
 var FSHADER_SOURCE = `
   precision mediump float;
   varying vec2 v_UV;
@@ -34,10 +35,18 @@ var FSHADER_SOURCE = `
   uniform sampler2D u_Sampler2; 
   uniform int u_whichTexture;
   
+  // Point Light
   uniform vec3 u_LightPos; 
-  uniform vec3 u_cameraPos; 
   uniform vec3 u_lightColor; 
   uniform int u_lightOn; 
+
+  // Spotlight (NEW)
+  uniform vec3 u_spotLightPos;
+  uniform vec3 u_spotLightDir;
+  uniform float u_spotLightCutoff;
+  uniform int u_spotLightOn;
+
+  uniform vec3 u_cameraPos; 
 
   void main() {
     vec4 baseColor;
@@ -57,37 +66,69 @@ var FSHADER_SOURCE = `
         baseColor = vec4(1, 0.2, 0.2, 1);         
     }
 
-    // Bypass lighting for normal visualizer (-3) and light indicator (-4)
     if (u_whichTexture == -3 || u_whichTexture == -4) {
         gl_FragColor = baseColor;
         return;
     }
 
-    // --- PHONG LIGHTING ---
     vec3 N = normalize(v_Normal);
-    vec3 L = normalize(u_LightPos - v_Position);
     vec3 V = normalize(u_cameraPos - v_Position);
-    vec3 R = reflect(-L, N); 
+    vec3 finalColor = vec3(0.0);
 
-    vec3 ambient = vec3(baseColor) * u_lightColor * 0.3; 
+    // 1. BASE AMBIENT LIGHT (Always exists slightly)
+    vec3 ambient = vec3(baseColor) * 0.2; 
 
-    float nDotL = max(dot(N, L), 0.0);
-    vec3 diffuse = vec3(baseColor) * u_lightColor * nDotL;
-
-    float specular = 0.0;
-    if (nDotL > 0.0) {
-        float rDotV = max(dot(R, V), 0.0);
-        specular = pow(rDotV, 10.0); 
-    }
-    vec3 specularLight = u_lightColor * specular * 0.8; 
-
-    vec3 finalColor = ambient + diffuse + specularLight;
-    
-    // Toggle lighting
+    // 2. POINT LIGHT CALCULATION
     if (u_lightOn == 1) {
-        gl_FragColor = vec4(finalColor, baseColor.a);
-    } else {
+        vec3 L = normalize(u_LightPos - v_Position);
+        vec3 R = reflect(-L, N); 
+        float nDotL = max(dot(N, L), 0.0);
+        vec3 diffuse = vec3(baseColor) * u_lightColor * nDotL;
+        float specular = 0.0;
+        if (nDotL > 0.0) {
+            specular = pow(max(dot(R, V), 0.0), 10.0); 
+        }
+        vec3 specularLight = u_lightColor * specular * 0.8; 
+        finalColor += diffuse + specularLight;
+    }
+
+    // 3. SPOTLIGHT CALCULATION (NEW)
+    if (u_spotLightOn == 1) {
+        vec3 L_spot = normalize(u_spotLightPos - v_Position);
+        vec3 D_spot = normalize(u_spotLightDir);
+        
+        // Find the angle between the light ray and the spotlight direction
+        float spotCosine = dot(-L_spot, D_spot);
+        // Convert cutoff angle to cosine for fast comparison
+        float cutoffCosine = cos(u_spotLightCutoff * 3.14159 / 180.0);
+
+        // If the fragment is inside the cone, light it up!
+        if (spotCosine > cutoffCosine) {
+            vec3 R_spot = reflect(-L_spot, N);
+            float nDotL_spot = max(dot(N, L_spot), 0.0);
+            
+            // Soften the edge of the spotlight beam
+            float spotFactor = smoothstep(cutoffCosine, cutoffCosine + 0.05, spotCosine);
+
+            vec3 diffuse_spot = vec3(baseColor) * nDotL_spot;
+            float spec_spot = 0.0;
+            if (nDotL_spot > 0.0) {
+                spec_spot = pow(max(dot(R_spot, V), 0.0), 10.0);
+            }
+            vec3 specular_spot = vec3(1.0) * spec_spot * 0.8; // White specular
+
+            finalColor += (diffuse_spot + specular_spot) * spotFactor;
+        }
+    }
+
+    // Add ambient at the very end
+    finalColor += ambient;
+    
+    // If BOTH lights are off, fallback to unlit color (assignment requirement)
+    if (u_lightOn == 0 && u_spotLightOn == 0) {
         gl_FragColor = baseColor;
+    } else {
+        gl_FragColor = vec4(finalColor, baseColor.a);
     }
   }`;
 
@@ -96,6 +137,7 @@ let canvas, gl, a_Position, a_UV, a_Normal;
 let u_FragColor, u_ModelMatrix, u_GlobalRotationMatrix, u_ViewMatrix, u_ProjectionMatrix, u_NormalMatrix;
 let u_Sampler0, u_Sampler1, u_Sampler2, u_whichTexture;
 let u_LightPos, u_cameraPos, u_lightColor, u_lightOn;
+
 
 let g_camera;
 let g_normalBuffer = null;
@@ -110,6 +152,13 @@ let g_lightOn = true;
 let g_lightAnimation = true;
 let g_lightPos = [0, 1, -0.5];
 let g_lightColor = [1.0, 1.0, 1.0];
+
+// --- Spotlight State ---
+let u_spotLightPos, u_spotLightDir, u_spotLightCutoff, u_spotLightOn;
+let g_spotLightPos = [0, 2.0, 0];
+let g_spotLightDir = [0, -1.0, 0]; // Points straight down
+let g_spotLightCutoff = 30.0; // 30 degree cone
+let g_spotLightOn = true;
 
 function setupWebGL() {
     canvas = document.getElementById('webgl');
@@ -141,6 +190,11 @@ function connectVariablesToGLSL() {
     u_cameraPos = gl.getUniformLocation(gl.program, 'u_cameraPos');
     u_lightColor = gl.getUniformLocation(gl.program, 'u_lightColor');
     u_lightOn = gl.getUniformLocation(gl.program, 'u_lightOn');
+
+    u_spotLightPos = gl.getUniformLocation(gl.program, 'u_spotLightPos');
+    u_spotLightDir = gl.getUniformLocation(gl.program, 'u_spotLightDir');
+    u_spotLightCutoff = gl.getUniformLocation(gl.program, 'u_spotLightCutoff');
+    u_spotLightOn = gl.getUniformLocation(gl.program, 'u_spotLightOn');
 }
 
 function addActionsForHtmlUI() {
@@ -164,6 +218,20 @@ function addActionsForHtmlUI() {
     document.getElementById('lightSlideX').oninput = function () { g_lightPos[0] = this.value / 100; renderScene(); };
     document.getElementById('lightSlideY').oninput = function () { g_lightPos[1] = this.value / 100; renderScene(); };
     document.getElementById('lightSlideZ').oninput = function () { g_lightPos[2] = this.value / 100; renderScene(); };
+
+
+    document.getElementById('spotLightOnBtn').onclick = function () { g_spotLightOn = true; renderScene(); };
+    document.getElementById('spotLightOffBtn').onclick = function () { g_spotLightOn = false; renderScene(); };
+    
+    document.getElementById('spotLightX').oninput = function () { g_spotLightPos[0] = this.value / 100; renderScene(); };
+    document.getElementById('spotLightY').oninput = function () { g_spotLightPos[1] = this.value / 100; renderScene(); };
+    document.getElementById('spotLightZ').oninput = function () { g_spotLightPos[2] = this.value / 100; renderScene(); };
+    
+    document.getElementById('spotDirX').oninput = function () { g_spotLightDir[0] = this.value / 100; renderScene(); };
+    document.getElementById('spotDirY').oninput = function () { g_spotLightDir[1] = this.value / 100; renderScene(); };
+    document.getElementById('spotDirZ').oninput = function () { g_spotLightDir[2] = this.value / 100; renderScene(); };
+    
+    document.getElementById('spotCutoff').oninput = function () { g_spotLightCutoff = this.value; renderScene(); };
 }
 
 var g_startTime = performance.now();
@@ -198,6 +266,12 @@ function renderScene() {
     gl.uniform3f(u_cameraPos, g_camera.eye.elements[0], g_camera.eye.elements[1], g_camera.eye.elements[2]);
     gl.uniform3f(u_lightColor, g_lightColor[0], g_lightColor[1], g_lightColor[2]);
     gl.uniform1i(u_lightOn, g_lightOn ? 1 : 0);
+
+    // --- Pass Spotlight Data ---
+    gl.uniform3f(u_spotLightPos, g_spotLightPos[0], g_spotLightPos[1], g_spotLightPos[2]);
+    gl.uniform3f(u_spotLightDir, g_spotLightDir[0], g_spotLightDir[1], g_spotLightDir[2]);
+    gl.uniform1f(u_spotLightCutoff, g_spotLightCutoff);
+    gl.uniform1i(u_spotLightOn, g_spotLightOn ? 1 : 0);
 
     // --- SKY BOX ---
     var sky = new Cube();
@@ -240,6 +314,16 @@ function renderScene() {
     light.matrix.scale(-0.1, -0.1, -0.1);
     light.matrix.translate(-0.5, -0.5, -0.5);
     light.renderFast();
+
+
+    // --- SPOTLIGHT INDICATOR ---
+    var spotLightNode = new Cube();
+    spotLightNode.color = [0.0, 1.0, 0.0, 1.0]; // Bright Green
+    spotLightNode.textureNum = -4; // Unlit
+    spotLightNode.matrix.translate(g_spotLightPos[0], g_spotLightPos[1], g_spotLightPos[2]);
+    spotLightNode.matrix.scale(-0.1, -0.1, -0.1);
+    spotLightNode.matrix.translate(-0.5, -0.5, -0.5);
+    spotLightNode.renderFast();
 
     var duration = performance.now() - startTime;
     sendTextToHTML("FPS: " + Math.floor(10000 / duration) / 10, "numdot");
