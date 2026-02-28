@@ -398,7 +398,7 @@ function drawMap() {
     if (g_normalOn) {
         wall.textureNum = -3;
     } else {
-        wall.textureNum = 1; // Assuming 1 is your wall texture
+        wall.textureNum = 1; 
     }
 
     // Loop through the 32x32 grid edges
