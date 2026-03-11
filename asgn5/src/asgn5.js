@@ -4,16 +4,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const scene = new THREE.Scene();
 
-// 1. SKYBOX
 const cubeTextureLoader = new THREE.CubeTextureLoader();
 const skyboxTexture = cubeTextureLoader.load([
     'px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'
 ]);
 scene.background = skyboxTexture;
 
-// 2. CAMERA & RENDERER
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-// Start camera a bit further back so the ocean is obvious
 camera.position.set(0, 8, 18);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -27,14 +24,12 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// 3. CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 2, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
-// 4. LIGHTS
-const dirLight = new THREE.DirectionalLight(0xffffff, 2.8);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
 dirLight.position.set(5, 12, 5);
 dirLight.castShadow = true;
 dirLight.shadow.camera.top = 10;
@@ -43,14 +38,12 @@ dirLight.shadow.camera.left = -10;
 dirLight.shadow.camera.right = 10;
 scene.add(dirLight);
 
-const ambientLight = new THREE.AmbientLight(0xfffacd, 1.2);
+const ambientLight = new THREE.AmbientLight(0xfffacd, 0.3);
 scene.add(ambientLight);
 
-// Global variables for UI
 let lighthouseBeamGroup;
 let lighthouseSpotLight;
 
-// 5. TEXTURES
 const textureLoader = new THREE.TextureLoader();
 const sandTexture = textureLoader.load('sand.png');
 sandTexture.wrapS = THREE.RepeatWrapping;
@@ -60,7 +53,6 @@ sandTexture.magFilter = THREE.NearestFilter;
 
 const cocoTexture = textureLoader.load('coco.png');
 
-// 6. WOW POINT: THE OCEAN
 const oceanGeo = new THREE.PlaneGeometry(200, 200);
 const oceanMat = new THREE.MeshPhongMaterial({
     color: 0x006994,
@@ -69,12 +61,10 @@ const oceanMat = new THREE.MeshPhongMaterial({
     shininess: 100
 });
 const ocean = new THREE.Mesh(oceanGeo, oceanMat);
-ocean.rotation.x = -Math.PI / 2; // Lay it flat
-ocean.position.y = -0.3; // Just below the sand
+ocean.rotation.x = -Math.PI / 2;
+ocean.position.y = -0.3;
 scene.add(ocean);
 
-
-// 7. MODELS
 const gltfLoader = new GLTFLoader();
 
 gltfLoader.load('Beach Bro.glb', (gltf) => {
@@ -124,8 +114,6 @@ gltfLoader.load('Flying seagull.glb', (gltf) => {
     seagulls.push({ model: sg3, radius: 3.0, speed: 2.2, height: 6.5, phase: Math.PI / 2, direction: 1 });
 });
 
-
-// 8. PRIMITIVES
 const matBrown = new THREE.MeshPhongMaterial({ color: 0x5c4033 });
 const matCoco = new THREE.MeshPhongMaterial({ map: cocoTexture });
 const matGreen = new THREE.MeshPhongMaterial({ color: 0x228b22 });
@@ -156,29 +144,24 @@ function createBasicLighthouse() {
     catwalkMesh.castShadow = true;
     lighthouseGroup.add(catwalkMesh);
 
-    // --- NEW SPINNING BEAM SETUP ---
     lighthouseBeamGroup = new THREE.Group();
     lighthouseBeamGroup.position.y = 4.5;
 
-    // The glowing bulb
     const lightGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.8, 16);
     const lightMesh = new THREE.Mesh(lightGeo, matLight);
     lighthouseBeamGroup.add(lightMesh);
 
-    // The SpotLight (shines in a cone, making the spin visible on the sand)
     lighthouseSpotLight = new THREE.SpotLight(0xffea00, 8, 30, Math.PI / 6, 0.5, 1);
     lighthouseSpotLight.position.set(0, 0, 0);
     lighthouseSpotLight.castShadow = true;
 
-    // Spotlight needs a target to point at
     const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, -2, 10); // Aim it slightly downward and out
+    targetObject.position.set(0, -2, 10);
     lighthouseBeamGroup.add(targetObject);
     lighthouseSpotLight.target = targetObject;
 
     lighthouseBeamGroup.add(lighthouseSpotLight);
     lighthouseGroup.add(lighthouseBeamGroup);
-    // --------------------------------
 
     const roofGeo = new THREE.ConeGeometry(0.9, 1.0, 16);
     const roofMesh = new THREE.Mesh(roofGeo, matRoof);
@@ -254,9 +237,6 @@ const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
 const sunMesh = new THREE.Mesh(sunGeo, sunMat);
 scene.add(sunMesh);
 
-// ==========================================
-// 9. UI EVENT LISTENERS
-// ==========================================
 let isSunAnimated = true;
 let isBirdsAnimated = true;
 let isLighthouseAnimated = true;
@@ -275,7 +255,7 @@ document.getElementById('colorAmb').addEventListener('input', (e) => { ambientLi
 document.getElementById('colorLh').addEventListener('input', (e) => {
     if (lighthouseSpotLight) {
         lighthouseSpotLight.color.set(e.target.value);
-        matLight.color.set(e.target.value); // Change bulb color too
+        matLight.color.set(e.target.value);
     }
 });
 
@@ -285,22 +265,16 @@ camButton.addEventListener('click', () => {
     if (isSeagullCam) {
         camButton.innerText = "🛑 Exit Seagull POV";
         camButton.classList.add('active');
-        controls.enabled = false; // Turn off mouse controls
+        controls.enabled = false;
     } else {
         camButton.innerText = "🎥 Ride Seagull (POV)";
         camButton.classList.remove('active');
-        controls.enabled = true; // Turn mouse controls back on
-
-        // Reset camera to standard view
+        controls.enabled = true;
         camera.position.set(0, 8, 18);
         camera.lookAt(0, 2, 0);
     }
 });
 
-
-// ==========================================
-// 10. ANIMATION LOOP
-// ==========================================
 let previousTime = 0;
 let sunTime = 0;
 let birdTime = 0;
@@ -313,7 +287,6 @@ function animate(time) {
 
     requestAnimationFrame(animate);
 
-    // Animate Ocean Tide
     ocean.position.y = -0.3 + Math.sin(time * 1.5) * 0.08;
 
     if (isSunAnimated) {
@@ -325,7 +298,6 @@ function animate(time) {
 
     if (isLighthouseAnimated && lighthouseBeamGroup) {
         lhTime += deltaTime;
-        // Spin the beam around the Y axis
         lighthouseBeamGroup.rotation.y = lhTime * 2.0;
     }
 
@@ -350,16 +322,11 @@ function animate(time) {
         });
     }
 
-    // --- WOW POINT: SEAGULL POV CAM ---
     if (isSeagullCam && seagulls.length > 0) {
         const leadBird = seagulls[0].model;
-
-        // Use matrix math to position the camera behind and slightly above the bird
         const relativeOffset = new THREE.Vector3(0, 1.5, -4);
         const cameraPos = relativeOffset.applyMatrix4(leadBird.matrixWorld);
-
         camera.position.copy(cameraPos);
-        // Tell the camera to look slightly ahead of the bird
         const lookTarget = new THREE.Vector3(0, 0, 5).applyMatrix4(leadBird.matrixWorld);
         camera.lookAt(lookTarget);
     } else {
