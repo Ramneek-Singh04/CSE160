@@ -161,6 +161,8 @@ function createBasicLighthouse() {
     lighthouseSpotLight.target = targetObject;
 
     lighthouseBeamGroup.add(lighthouseSpotLight);
+
+    // THE FIX: Add the beam group to the main lighthouse group
     lighthouseGroup.add(lighthouseBeamGroup);
 
     const roofGeo = new THREE.ConeGeometry(0.9, 1.0, 16);
@@ -295,6 +297,8 @@ function animate(time) {
         sunMesh.position.y = 8 + Math.sin(sunTime * 0.7) * 4;
         sunMesh.position.z = -5;
     }
+
+    dirLight.position.copy(sunMesh.position);
 
     if (isLighthouseAnimated && lighthouseBeamGroup) {
         lhTime += deltaTime;
