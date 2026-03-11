@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Assignment 5: Three.js World</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* The UI Control Panel - SCALED UP 50% */
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 20, 25, 0.85);
+            color: #eee;
+            padding: 22px 35px;
+            border-radius: 12px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            user-select: none;
+            font-size: 21px;
+            /* 50% larger than 14px */
+        }
+
+        #ui-panel h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #555;
+            padding-bottom: 12px;
+            font-size: 26px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 30px;
+        }
+
+        /* Make checkboxes 50% larger */
+        input[type="checkbox"] {
+            transform: scale(1.5);
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        /* Make color pickers 50% larger */
+        input[type="color"] {
+            border: none;
+            width: 45px;
+            height: 35px;
+            padding: 0;
+            cursor: pointer;
+            background: none;
+        }
+
+        /* Wow Feature Button */
+        #camButton {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #0078D7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #camButton:hover {
+            background-color: #005A9E;
+        }
+
+        #camButton.active {
+            background-color: #cc0000;
+        }
+    </style>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/"
+      }
+    }
+    </script>
+</head>
+
+<body>
+    <div id="ui-panel">
+        <h3>World Controls</h3>
+
+        <div class="control-group">
+            <div class="control-row">
+                <label for="animSun">Orbiting Sun</label>
+                <input type="checkbox" id="animSun" checked>
+            </div>
+            <div class="control-row">
+                <label for="animBirds">Flying Birds</label>
+                <input type="checkbox" id="animBirds" checked>
+            </div>
+            <div class="control-row">
+                <label for="animLighthouse">Spinning Lighthouse</label>
+                <input type="checkbox" id="animLighthouse" checked>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="control-row">
+                <label for="toggleSun">Sun Light</label>
+                <div>
+                    <input type="color" id="colorSun" value="#ffffff">
+                    <input type="checkbox" id="toggleSun" checked>
+                </div>
+            </div>
+            <div class="control-row">
+                <label for="toggleAmb">Ambient Light</label>
+                <div>
+                    <input type="color" id="colorAmb" value="#fffacd">
+                    <input type="checkbox" id="toggleAmb" checked>
+                </div>
+            </div>
+            <div class="control-row">
+                <label for="toggleLh">Lighthouse Beam</label>
+                <div>
+                    <input type="color" id="colorLh" value="#ffea00">
+                    <input type="checkbox" id="toggleLh" checked>
+                </div>
+            </div>
+        </div>
+
+        <button id="camButton">🎥 Ride Seagull (POV)</button>
+    </div>
+
+    <script type="module" src="asgn5.js"></script>
+</body>
+
+</html>
